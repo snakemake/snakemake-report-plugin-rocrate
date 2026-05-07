@@ -8,6 +8,11 @@ dist/
 # Ignore GitHub CI for the time beeing
 .github/workflows
 
+# pytest / coverage
+.coverage
+coverage-report/
+.pytest_cache/
+
 # Python bytecode
 __pycache__/
 *.pyc
