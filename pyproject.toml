@@ -9,7 +9,9 @@ readme = "README.md"
 requires-python = ">=3.11,<4.0"
 dependencies = [
     "snakemake-interface-common (>=1.17.4,<2.0.0)", 
-    "snakemake-interface-report-plugins (>=1.1.0,<2.0.0)"
+    "snakemake-interface-report-plugins (>=1.1.0,<2.0.0)",
+    "rocrate (>=0.15.0, <2.0.0)",
+    "spdx-license-list (>=3.28.0, <4.0.0)"
 ]
 
 [build-system]
@@ -35,6 +37,16 @@ editable = true
 
 [tool.pixi.environments.dev]
 features = [ "dev",]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W", 
+    "F",
+    "I",    # isort — import sorting
+    "ANN",
+    "UP",
+]
 
 [tool.pixi.feature.dev.tasks]
 lint = "ruff check"
