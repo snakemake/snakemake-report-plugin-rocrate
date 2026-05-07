@@ -1,0 +1,3 @@
+[RO-Crate](https://www.researchobject.org/ro-crate/) is a community standard for packaging research data together with its metadata as a self-contained, machine-readable unit. It makes research outputs findable, accessible, interoperable, and reusable (FAIR) without requiring specialized infrastructure.
+
+This plugin automatically generates a [Provenance Run Crate](https://www.researchobject.org/workflow-run-crate/profiles/provenance_run_crate/). This is a standards-compliant, self-contained provenance record capturing the workflow, its inputs and outputs, and the execution of each individual step.
