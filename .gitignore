@@ -11,3 +11,7 @@ dist/
 # Python bytecode
 __pycache__/
 *.pyc
+
+# VSCode
+.vscode/*
+!.vscode/settings.json

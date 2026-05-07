@@ -5,7 +5,7 @@ import uuid
 
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 from rocrate.model import (
     ComputationalWorkflow,
@@ -29,6 +29,7 @@ from snakemake_interface_report_plugins.settings import ReportSettingsBase
 # Snakemake and the user as WorkflowError.
 from snakemake_interface_common.exceptions import WorkflowError  # noqa
 
+from pathlib import Path
 
 # Optional:
 # Define additional settings for your reporter.
@@ -37,7 +38,7 @@ from snakemake_interface_common.exceptions import WorkflowError  # noqa
 # Make sure that all defined fields are Optional (or bool) and specify a default value
 # of None (or False) or anything else that makes sense in your case.
 @dataclass
-class ReportSettings(ReportSettingsBase):
+class ReportSettings(ReportSettingsBase): # type: ignore[misc]
     run_name: Optional[str] = field(
         default="Workflow Run RO-Crate",
         metadata={
@@ -101,15 +102,15 @@ class ReportSettings(ReportSettingsBase):
 
 # Required:
 # Implementation of your reporter
-class Reporter(ReporterBase):
+class Reporter(ReporterBase): # type: ignore[misc]
     wf_crate: ROCrate
     valid_spdx_identifier: bool
     valid_ror_identifier: bool
 
-    author_props: dict
-    org_props: dict
+    author_props: dict[str, Any]
+    org_props: dict[str, Any]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # initialize additional attributes
         # Do not overwrite the __init__ method as this is kept in control of the base
         # class in order to simplify the update process.
@@ -117,18 +118,18 @@ class Reporter(ReporterBase):
         # for attributes of the base class.
         # In particular, the settings of above ReportSettings class are accessible via
         # self.settings.
-        self.logger = snakemake_logger
+        self.logger: Any = snakemake_logger
         self.author_props = {}
         self.org_props = {"@type": "Organization"}
 
-    def render(self):
+    def render(self) -> None:
         # Validate Settings
         self.validate_settings()
 
         # Render the report, using attributes of the base class.
 
         # Path to main Snakefile!
-        main_snakefile = self.dag.workflow.main_snakefile  # type: ignore[attr-defined]
+        main_snakefile = self.dag.workflow.main_snakefile
         print("Main snakefile: " + main_snakefile)
 
         # Base path for the RO-Crate. By default this is the directory containing the Snakefile
@@ -137,7 +138,7 @@ class Reporter(ReporterBase):
         self.wf_crate = ROCrate()
 
         workflow_path = Path(main_snakefile)
-        include_files = []
+        include_files: list[Path] = []
         self.wf_crate.add_workflow(
             workflow_path,
             workflow_path.name,
@@ -326,25 +327,25 @@ class Reporter(ReporterBase):
         # print("workflow_description: " + str(self.workflow_description))
         # ""
 
-        print("dag.workflow: " + str(self.dag.workflow))  # type: ignore[attr-defined]
+        print("dag.workflow: " + str(self.dag.workflow))
         # dag.workflow: Workflow(config_settings=ConfigSettings(config=immutables.Map({}), configfiles=[], config_args=[], replace_workflow_config=False), resource_settings=ResourceSettings(cores=1, nodes=None, local_cores=None, max_threads=None, resources=immutables.Map({}), overwrite_threads=immutables.Map({}), overwrite_scatter=immutables.Map({}), overwrite_resource_scopes=immutables.Map({}), overwrite_resources=immutables.Map({}), default_resources=<snakemake.resources.DefaultResources object at 0x7facb6d1c830>), workflow_settings=WorkflowSettings(wrapper_prefix=None, exec_mode=<ExecMode.DEFAULT: 0>, cache=None, consider_ancient={}), storage_settings=StorageSettings(default_storage_provider=None, default_storage_prefix=None, shared_fs_usage=frozenset({<SharedFSUsage.STORAGE_LOCAL_COPIES: 4>, <SharedFSUsage.SOURCE_CACHE: 5>, <SharedFSUsage.SOURCES: 3>, <SharedFSUsage.INPUT_OUTPUT: 1>, <SharedFSUsage.SOFTWARE_DEPLOYMENT: 2>, <SharedFSUsage.PERSISTENCE: 0>}), keep_storage_local=False, retrieve_storage=True, local_storage_prefix=PosixPath('.snakemake/storage'), remote_job_local_storage_prefix=PosixPath('.snakemake/storage'), omit_flags=frozenset(), notemp=False, all_temp=False, unneeded_temp_files=frozenset(), wait_for_free_local_storage=None), dag_settings=DAGSettings(targets=frozenset(), target_jobs=frozenset(), target_files_omit_workdir_adjustment=False, batch=None, forcetargets=False, forceall=False, forcerun=frozenset(), until=frozenset(), omit_from=frozenset(), force_incomplete=False, allowed_rules=frozenset(), rerun_triggers=frozenset({<RerunTrigger.PARAMS: 1>, <RerunTrigger.MTIME: 0>, <RerunTrigger.CODE: 4>, <RerunTrigger.SOFTWARE_ENV: 3>, <RerunTrigger.INPUT: 2>}), max_inventory_wait_time=20, trust_io_cache=False, max_checksum_file_size=1000000, strict_evaluation=frozenset(), print_dag_as=<PrintDag.DOT: 0>), execution_settings=ExecutionSettings(latency_wait=5, keep_going=False, debug=False, standalone=False, ignore_ambiguity=False, lock=True, ignore_incomplete=False, wait_for_files=(), no_hooks=False, retries=0, attempt=1, use_threads=False, shadow_prefix=None, keep_incomplete=False, keep_metadata=True, edit_notebook=None, cleanup_scripts=True, queue_input_wait_time=10), deployment_settings=DeploymentSettings(deployment_method=frozenset(), conda_prefix=None, conda_cleanup_pkgs=None, conda_base_path=None, conda_frontend='conda', conda_not_block_search_path_envvars=False, apptainer_args='', apptainer_prefix=None), scheduling_settings=SchedulingSettings(prioritytargets=frozenset(), scheduler='ilp', ilp_solver=None, solver_path=None, greediness=1.0, subsample=None, max_jobs_per_second=None, max_jobs_per_timespan=None), output_settings=OutputSettings(dryrun=False, printshellcmds=False, nocolor=False, quiet=None, debug_dag=False, verbose=True, show_failed_logs=True, log_handler_settings=immutables.Map({}), keep_logger=False, stdout=False, benchmark_extended=False), remote_execution_settings=RemoteExecutionSettings(jobname='snakejob.{rulename}.{jobid}.sh', jobscript=None, max_status_checks_per_second=100.0, seconds_between_status_checks=0, container_image='snakemake/snakemake:v9.11.2', preemptible_retries=None, preemptible_rules=PreemptibleRules(rules=frozenset(), all=False), envvars=[], immediate_submit=False, precommand=None, job_deploy_sources=True), group_settings=GroupSettings(overwrite_groups=immutables.Map({}), group_components=immutables.Map({}), local_groupid='local'), executor_settings=None, storage_provider_settings={}, global_report_settings=None, check_envvars=True, cache_rules={'all': False, 'a': False, 'b': False, 'c': False, 'd': False}, overwrite_workdir=PosixPath('/tmp/pytest-of-fbartusch/pytest-17/test_simple_workflow0/simple'), _workdir_handler=None, injected_conda_envs=[])
 
         print(
             "self.dag.workflow.config_settings: "
             + str(self.dag.workflow.config_settings)
-        )  # type: ignore[attr-defined]
+        )
         # self.dag.workflow.config_settings: ConfigSettings(config=immutables.Map({}), configfiles=[], config_args=[], replace_workflow_config=False)
 
         # print("metadata: " + str(self.metadata))
         # metadata: {}
 
-    def validate_settings(self):
+    def validate_settings(self) -> None:
         # Check valid SPDX identifier.
         self.valid_spdx_identifier = (
             self.settings.run_license in spdx_license_list.LICENSES
         )
         if not self.valid_spdx_identifier:
-            logger.warning(
+            self.logger.warning(
                 "License '%s' is not a valid SPDX identifier. "
                 "Consider using one from https://spdx.org/licenses/",
                 self.settings.run_license,
@@ -382,7 +383,7 @@ class Reporter(ReporterBase):
             if "ror_display" in name["types"]:
                 self.org_props["name"] = name["value"]
 
-    def add_license(self):
+    def add_license(self) -> None:
         if self.valid_spdx_identifier:
             self.wf_crate.license = {
                 "@id": "http://spdx.org/licenses/" + self.settings.run_license

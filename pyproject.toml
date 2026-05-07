@@ -19,7 +19,7 @@ build-backend = "hatchling.build"
 requires = [ "hatchling",]
 
 [dependency-groups]
-dev = [ "ruff", "coverage", "pytest", "twine", "build", "snakemake>=9.17.2,<10",]
+dev = [ "mypy", "types-requests", "ruff", "coverage", "pytest", "twine", "build", "snakemake>=9.17.2,<10",]
 
 [project.urls]
 Repository = "https://github.com/your/plugin"
@@ -48,9 +48,26 @@ select = [
     "UP",
 ]
 
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = [
+    "rocrate.*",
+    "snakemake.*",
+    "snakemake_interface_report_plugins.*",
+    "snakemake_interface_common.*",
+]
+ignore_missing_imports = true
+
 [tool.pixi.feature.dev.tasks]
 lint = "ruff check"
 format = "ruff format"
+typecheck = "mypy src/"
 test = "pytest --cov=snakemake-report-plugin-rocrate --cov-report=xml:coverage-report/coverage.xml --cov-report=term-missing tests/tests.py"
 build = "python -m build"
 check-build = { cmd = "python -m twine check dist/*", depends-on = ["build"] }

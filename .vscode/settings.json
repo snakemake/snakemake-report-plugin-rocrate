@@ -1,0 +1,7 @@
+"python.analysis.typeCheckingMode": "strict",
+"python.analysis.autoImportCompletions": true,
+"python.analysis.inlayHints.variableTypes": true,
+"python.analysis.inlayHints.functionReturnTypes": true,
+"python.analysis.inlayHints.parameterTypes": true,
+"python.analysis.inlayHints.parameterNames": "all",
+"editor.inlayHints.enabled": "on",
