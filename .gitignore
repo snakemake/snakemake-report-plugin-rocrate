@@ -1,0 +1,13 @@
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+# Builds
+dist/
+
+# Ignore GitHub CI for the time beeing
+.github/workflows
+
+# Python bytecode
+__pycache__/
+*.pyc
