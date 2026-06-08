@@ -83,7 +83,7 @@ class ReportSettings(ReportSettingsBase): # type: ignore[misc]
     researcher_name: Optional[str] = field(
         default=None,
         metadata={
-            "help:": "Specify the full name of the researcher responsible for running the workflow. "
+            "help": "Specify the full name of the researcher responsible for running the workflow. "
             "This will be recorded in the metadata.",
             "env_var": False,
             "required": False,
@@ -92,7 +92,7 @@ class ReportSettings(ReportSettingsBase): # type: ignore[misc]
     organization_ror: Optional[str] = field(
         default=None,
         metadata={
-            "help:": "Use a ROR ID (Research Organization Registry) to uniquely identify a research organization. "
+            "help": "Use a ROR ID (Research Organization Registry) to uniquely identify a research organization. "
             "This will be used as the researcher's affiliation and recorded in the metadata.",
             "env_var": False,
             "required": False,
