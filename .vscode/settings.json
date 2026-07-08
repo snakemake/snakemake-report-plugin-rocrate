@@ -1,7 +1,28 @@
-"python.analysis.typeCheckingMode": "strict",
-"python.analysis.autoImportCompletions": true,
-"python.analysis.inlayHints.variableTypes": true,
-"python.analysis.inlayHints.functionReturnTypes": true,
-"python.analysis.inlayHints.parameterTypes": true,
-"python.analysis.inlayHints.parameterNames": "all",
-"editor.inlayHints.enabled": "on",
+{
+  "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingTypeStubs": "none",
+    "reportMissingModuleSource": "none",
+    "reportUnknownMemberType": "none",
+    "reportUnknownVariableType": "none",
+    "reportUnknownArgumentType": "none",
+    "reportUnknownParameterType": "none",
+    "reportUnknownLambdaType": "none"
+  },
+  "python.analysis.inlayHints.variableTypes": true,
+  "python.analysis.inlayHints.functionReturnTypes": true,
+  "python.analysis.inlayHints.parameterTypes": true,
+  "python.analysis.inlayHints.parameterNames": "all",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.pixi/envs/dev/bin/python",
+  "editor.inlayHints.enabled": "on",
+
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit"
+    }
+  }
+}

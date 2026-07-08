@@ -5,6 +5,7 @@ authors = [
     { name = "Felix Bartusch", email = "felix.bartusch@uni-tuebingen.de" },
 ]
 description = "Snakemake Report Plugin to automatically create Workflow Run RO-Crates"
+urls = { Repository = "https://github.com/snakemake/snakemake-report-plugin-rocrate", Documentation = "https://snakemake.github.io/snakemake-plugin-catalog/plugins/report/rocrate.html" }
 readme = "README.md"
 requires-python = ">=3.11,<4.0"
 dependencies = [
@@ -21,10 +22,6 @@ requires = [ "hatchling",]
 [dependency-groups]
 dev = [ "mypy", "types-requests", "ruff", "coverage", "pytest", "pytest-cov", "twine", "build", "snakemake>=9.17.2,<10",]
 
-[project.urls]
-Repository = "https://github.com/your/plugin"
-Documentation = "https://snakemake.github.io/snakemake-plugin-catalog/plugins/report/rocrate.html"
-
 [tool.pixi.workspace]
 channels = [ "conda-forge",]
 platforms = [ "linux-64",]
@@ -35,8 +32,41 @@ platforms = [ "linux-64",]
 path = "."
 editable = true
 
+# Dependencies for the different supported Python versions.
+# These are used in CI to test the plugin against all supported Python versions.
+[tool.pixi.feature.py311.dependencies]
+python = "3.11.*"
+
+[tool.pixi.feature.py312.dependencies]
+python = "3.12.*"
+
+[tool.pixi.feature.py313.dependencies]
+python = "3.13.*"
+
+[tool.pixi.feature.py314.dependencies]
+python = "3.14.*"
+
+# Development Environment
 [tool.pixi.environments.dev]
 features = [ "dev",]
+
+# Test environments for all supported Python versions.
+# These are used in CI to test the plugin against all supported Python versions.
+[tool.pixi.environments.test-py311]
+features = ["dev", "py311"]
+solve-group = "py311"
+
+[tool.pixi.environments.test-py312]
+features = ["dev", "py312"]
+solve-group = "py312"
+
+[tool.pixi.environments.test-py313]
+features = ["dev", "py313"]
+solve-group = "py313"
+
+[tool.pixi.environments.test-py314]
+features = ["dev", "py314"]
+solve-group = "py314"
 
 [tool.ruff.lint]
 select = [
@@ -67,8 +97,14 @@ ignore_missing_imports = true
 
 [tool.pixi.feature.dev.tasks]
 lint = "ruff check"
+format-check = "ruff format --check"
 format = "ruff format"
 typecheck = "mypy src/"
-test = "pytest --cov=snakemake-report-plugin-rocrate --cov-report=xml:coverage-report/coverage.xml --cov-report=term-missing tests/test_plugin.py"
+test = "pytest --cov=snakemake_report_plugin_rocrate --cov-report=xml:coverage-report/coverage.xml --cov-report=term-missing tests/"
+
+# This resembles the basic CI pipeline. Run
+#   pixi run -e dev check
+# before pushing to main.
+check = { depends-on = ["format-check", "lint", "test"] }
 build = "python -m build"
 check-build = { cmd = "python -m twine check dist/*", depends-on = ["build"] }
