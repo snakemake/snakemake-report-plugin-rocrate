@@ -12,7 +12,9 @@ dependencies = [
     "snakemake-interface-common (>=1.17.4,<2.0.0)", 
     "snakemake-interface-report-plugins (>=1.1.0,<2.0.0)",
     "rocrate (>=0.15.0, <2.0.0)",
-    "spdx-license-list (>=3.28.0, <4.0.0)"
+    "spdx-license-list (>=3.28.0, <4.0.0)",
+    "roc-validator",
+    "markdown-it-py (>=2.2,<3.0.0)"
 ]
 
 [build-system]
@@ -20,7 +22,7 @@ build-backend = "hatchling.build"
 requires = [ "hatchling",]
 
 [dependency-groups]
-dev = [ "mypy", "types-requests", "ruff", "coverage", "pytest", "pytest-cov", "twine", "build", "snakemake>=9.17.2,<10",]
+dev = [ "mypy", "ruff", "coverage", "pytest", "pytest-cov", "twine", "build", "snakemake>=9.17.2,<10",]
 
 [tool.pixi.workspace]
 channels = [ "conda-forge",]
@@ -78,12 +80,18 @@ select = [
     "UP",
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# The provenance pipeline handles Snakemake runtime objects and JSON-LD payloads
+# whose concrete types are supplied dynamically by their respective frameworks.
+"src/snakemake_report_plugin_rocrate/*.py" = ["ANN"]
+
 [tool.mypy]
 python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
 warn_unreachable = true
+follow_imports = "skip"
 
 [[tool.mypy.overrides]]
 module = [
@@ -94,6 +102,25 @@ module = [
     "snakemake.common.tests.*",
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "snakemake_report_plugin_rocrate.jsonld",
+    "snakemake_report_plugin_rocrate.models",
+    "snakemake_report_plugin_rocrate.provenance",
+    "snakemake_report_plugin_rocrate.provenance_files",
+    "snakemake_report_plugin_rocrate.provenance_graph",
+    "snakemake_report_plugin_rocrate.provenance_jobs",
+    "snakemake_report_plugin_rocrate.rocrate_builder",
+    "snakemake_report_plugin_rocrate.tool_resolver",
+    "snakemake_report_plugin_rocrate.utils",
+    "snakemake_report_plugin_rocrate.validator",
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*"]
+follow_imports = "skip"
 
 [tool.pixi.feature.dev.tasks]
 lint = "ruff check"

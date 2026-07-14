@@ -21,16 +21,116 @@ This plugin is under active development. Features may be incomplete or subject t
 
 ## Installation
 
-Once released, the plugin will be installable via pip:
+The plugin is not currently published on PyPI and must be installed from Git.
+Install the latest version directly from GitHub:
 
 ```bash
-pip install snakemake-report-plugin-rocrate
+python -m pip install \
+  "git+https://github.com/snakemake/snakemake-report-plugin-rocrate.git"
+```
+
+For development, clone the repository and install it in editable mode:
+
+```bash
+git clone https://github.com/snakemake/snakemake-report-plugin-rocrate.git
+cd snakemake-report-plugin-rocrate
+python -m pip install --editable .
 ```
 
 ## Usage
+
+The reporter collects execution metadata from Snakemake jobs and writes a
+validated `provenance-run-crate-0.5`.
+
+## Reporter arguments
+
+All reporter options use the prefix `--report-rocrate-`.
+
+### `filename`
+
+Sets the output filename without the `.zip` suffix. For example,
+`--report-rocrate-filename workflow-run` creates `workflow-run.zip`. If this
+argument is omitted, the reporter creates `ro-crate.zip`.
+
+### `run-name`
+
+Sets the human-readable name of the workflow run and the root dataset. The
+default is `Snakemake Provenance Run`.
+
+### `run-description`
+
+Describes the workflow run, its purpose, or its execution context. The default
+is `RO-Crate describing a Snakemake workflow run.`
+
+### `run-license`
+
+Sets the license applying to the crate. It accepts an SPDX identifier such as
+`CC-BY-4.0` or a license URL. The default is `CC-BY-4.0`.
+
+### `main-tool`
+
+Selects the primary `SoftwareApplication` by matching the supplied value with
+a discovered tool name. The match is case-insensitive. Actions use this tool
+as their `instrument`, while all other discovered tools are attached through
+`softwareRequirements`. A single discovered tool is selected automatically;
+when multiple tools are found, this argument is required.
+
+### `researcher-orcid`
+
+Sets the ORCID URL or identifier of the person responsible for the workflow
+run, for example `https://orcid.org/0000-0002-1825-0097`.
+
+### `researcher-name`
+
+Sets the full name of the person responsible for the workflow run. When an
+organization is supplied, the researcher is affiliated with that organization.
+
+### `organization-ror`
+
+Sets the ROR URL or identifier used as the organization's `@id`, for example
+`https://ror.org/04vnq7t77`. The reporter does not contact the ROR API.
+
+### `organization-name`
+
+Sets the human-readable organization name. It is recorded on the organization
+entity and can be used even when no ROR identifier is supplied.
+
+### `organization-url`
+
+Sets the organization's website URL. It is recorded directly from the supplied
+value without making a network request.
+
+## Running the example
+
+The repository includes a FEniCS/DOLFINx workflow for a linear-elastic plate
+with a hole. From the repository root, navigate to the example and generate the RO-Crate:
+
+```bash
+cd examples/linear-elastic-plate-with-hole/fenics-dolfinx
+
+snakemake \
+  --software-deployment-method conda \
+  --reporter rocrate \
+  --report-rocrate-filename "workflow-run" \
+  --report-rocrate-run-name "Linear elastic plate with a hole" \
+  --report-rocrate-run-license "CC-BY-4.0" \
+  --report-rocrate-main-tool "fenics-dolfinx" \
+  --report-rocrate-organization-ror "https://ror.org/04vnq7t77" \
+  --report-rocrate-organization-name "University of Stuttgart" \
+  --report-rocrate-organization-url "https://www.uni-stuttgart.de/en/" \
+  --cores 1
+```
+
+The reporter writes `workflow-run.zip` in the example directory.
+
+The remaining command-line arguments are standard Snakemake options:
+
+- `--reporter rocrate` selects this report plugin.
+- `--software-deployment-method conda` enables the Conda environments declared
+  by the workflow.
+- `--cores 1` allows Snakemake to use one CPU core.
 
 For usage instructions, see the documentation:
 
 - [Introduction](docs/intro.md)
 - [Further information](docs/further.md)
-
