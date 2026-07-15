@@ -46,7 +46,7 @@ rule summary:
         summary["mesh"] = input[2]
         summary["output"] = input[0]
         # Load the mesh and output data
-        max_mises_stress = 42.0
+        max_mises_stress = 0.0
         from xml.etree import ElementTree as ET
         tree = ET.parse(input[0])
         root = tree.getroot()
@@ -59,9 +59,10 @@ rule summary:
         for mesh in meshes:
             # Assuming the mesh has a 'von_mises_stress' array
             try:
-                max_mises_stress = float(mesh["von_mises_stress"].max())
+                current_max = float(mesh["von_mises_stress"].max())
++               max_mises_stress = max(max_mises_stress, current_max)
             except KeyError:
                 print("von_mises_stress not found in mesh.")
-        summary["max_mises_stress"] = max_mises_stress # Replace with actual computation
+        summary["max_mises_stress"] = max_mises_stress
         with open(output[0], "w") as f:
             json.dump(summary, f, indent=4)

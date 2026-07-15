@@ -27,7 +27,6 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
             "help": "Output filename stem; the .zip suffix is added automatically.",
             "env_var": False,
             "required": False,
-            "parse_func": Path,
             "unparse_func": str,
         },
     )

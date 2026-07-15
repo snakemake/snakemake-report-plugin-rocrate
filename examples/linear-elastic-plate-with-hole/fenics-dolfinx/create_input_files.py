@@ -28,7 +28,7 @@ radius = (
     .magnitude
 )
 # create mesh
-"""
+r"""
 4---------3
 |         |
 5_        |

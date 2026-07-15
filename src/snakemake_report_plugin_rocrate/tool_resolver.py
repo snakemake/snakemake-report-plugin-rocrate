@@ -63,10 +63,14 @@ class ToolResolver:
                         found_targets.add(pkg_name)
 
         selected_env_pkgs = None
-        for _, env_path in self._list_conda_envs().items():
+        try:
+            envs = self._list_conda_envs()
+        except (OSError, subprocess.CalledProcessError, json.JSONDecodeError):
+            envs = {}
+        for _, env_path in envs.items():
             try:
                 pkgs = self._get_packages(env_path, found_targets)
-            except Exception:
+            except (OSError, subprocess.CalledProcessError, json.JSONDecodeError):
                 continue
             if all(pkg in pkgs for pkg in found_targets):
                 selected_env_pkgs = pkgs

@@ -113,8 +113,11 @@ class FileProvenanceHelpers:
         if Path(tokens[0]).name in interpreters:
             start_idx = 1
             for i, tok in enumerate(tokens[1:], start=1):
-                if tok.startswith("-"):
+                if tok in {"-c", "-e", "--command"} or tok.startswith("-"):
                     continue
+                if tokens[i - 1] in {"-c", "-e", "--command"}:
+                    # inline code/command, not a file
+                    break
                 script_path = tok
                 start_idx = i + 1
                 break
@@ -133,13 +136,13 @@ class FileProvenanceHelpers:
         return script_path, file_paths
 
     def _find_snakefile(self):
-        """Return the local Snakefile name and relative path if it exists."""
-        current_dir = os.getcwd()
-        for file in os.listdir(current_dir):
-            if file.lower() == "snakefile":
-                rel_path = os.path.relpath(os.path.join(current_dir, file))
-                return file, rel_path
-        return None
+        """Return the configured Snakefile name and relative path when available."""
+        snakefile = self.dag.workflow.main_snakefile
+        if not snakefile:
+            return None
+
+        snakefile_path = Path(snakefile)
+        return snakefile_path.name, os.path.relpath(snakefile_path)
 
     def _is_file(self, file_name: str) -> bool:
         """Return whether a path currently exists as a regular file."""
