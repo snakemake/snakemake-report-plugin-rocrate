@@ -60,7 +60,7 @@ rule summary:
             # Assuming the mesh has a 'von_mises_stress' array
             try:
                 current_max = float(mesh["von_mises_stress"].max())
-+               max_mises_stress = max(max_mises_stress, current_max)
+                max_mises_stress = max(max_mises_stress, current_max)
             except KeyError:
                 print("von_mises_stress not found in mesh.")
         summary["max_mises_stress"] = max_mises_stress
