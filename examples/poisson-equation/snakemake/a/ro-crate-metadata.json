@@ -1,0 +1,980 @@
+{
+    "@context": [
+        "https://w3id.org/ro/crate/1.1/context",
+        "https://w3id.org/ro/terms/workflow-run/context"
+    ],
+    "@graph": [
+        {
+            "@id": "./",
+            "@type": "Dataset",
+            "conformsTo": [
+                {
+                    "@id": "https://w3id.org/ro/wfrun/process/0.5"
+                },
+                {
+                    "@id": "https://w3id.org/ro/wfrun/workflow/0.5"
+                },
+                {
+                    "@id": "https://w3id.org/ro/wfrun/provenance/0.5"
+                },
+                {
+                    "@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0"
+                }
+            ],
+            "datePublished": "2026-07-15T14:38:43+00:00",
+            "description": "RO-Crate describing a Snakemake workflow run.",
+            "hasPart": [
+                {
+                    "@id": "Snakefile"
+                },
+                {
+                    "@id": "_EXTERNAL/source/poisson.py"
+                },
+                {
+                    "@id": "_EXTERNAL/source/postprocessing.py"
+                },
+                {
+                    "@id": "_EXTERNAL/source/unit_square.geo"
+                },
+                {
+                    "@id": "preprocessing/square.msh"
+                },
+                {
+                    "@id": "preprocessing/square.xdmf"
+                },
+                {
+                    "@id": "solvePoisson/poisson.xdmf"
+                },
+                {
+                    "@id": "solvePoisson/poisson.h5"
+                },
+                {
+                    "@id": "solvePoisson/poisson.vtu"
+                },
+                {
+                    "@id": "solvePoisson/poisson_p0_000000.vtu"
+                },
+                {
+                    "@id": "solvePoisson/numdofs.txt"
+                },
+                {
+                    "@id": "postprocessing/plotoverline.csv"
+                },
+                {
+                    "@id": "_EXTERNAL/source/prepare_paper_macros.py"
+                },
+                {
+                    "@id": "_EXTERNAL/source/macros.tex.template"
+                },
+                {
+                    "@id": "macros.tex"
+                },
+                {
+                    "@id": "_EXTERNAL/source/paper.tex"
+                },
+                {
+                    "@id": "paper.tex"
+                },
+                {
+                    "@id": "paper.pdf"
+                }
+            ],
+            "license": {
+                "@id": "http://spdx.org/licenses/MIT"
+            },
+            "mainEntity": {
+                "@id": "Snakefile"
+            },
+            "mentions": [
+                {
+                    "@id": "#action_workflow_run"
+                },
+                {
+                    "@id": "#action_5"
+                },
+                {
+                    "@id": "#action_4"
+                },
+                {
+                    "@id": "#action_3"
+                },
+                {
+                    "@id": "#action_2"
+                },
+                {
+                    "@id": "#action_1"
+                },
+                {
+                    "@id": "#action_0"
+                }
+            ],
+            "name": "Poisson equation",
+            "publisher": {
+                "@id": "https://ror.org/04vnq7t77"
+            }
+        },
+        {
+            "@id": "ro-crate-metadata.json",
+            "@type": "CreativeWork",
+            "about": {
+                "@id": "./"
+            },
+            "conformsTo": [
+                {
+                    "@id": "https://w3id.org/ro/crate/1.1"
+                },
+                {
+                    "@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0"
+                }
+            ]
+        },
+        {
+            "@id": "http://spdx.org/licenses/MIT",
+            "@type": "CreativeWork",
+            "name": "MIT License"
+        },
+        {
+            "@id": "https://ror.org/04vnq7t77",
+            "@type": "Organization",
+            "name": "University of Stuttgart",
+            "url": "https://www.uni-stuttgart.de/en/"
+        },
+        {
+            "@id": "Snakefile",
+            "@type": [
+                "File",
+                "SoftwareSourceCode",
+                "ComputationalWorkflow"
+            ],
+            "hasPart": {
+                "@id": "#snakemake"
+            },
+            "name": "Snakefile",
+            "programmingLanguage": {
+                "@id": "https://w3id.org/workflowhub/workflow-ro-crate#snakemake"
+            }
+        },
+        {
+            "@id": "_EXTERNAL/source/poisson.py",
+            "@type": "File",
+            "encodingFormat": "text/x-python",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_3-input-1"
+                }
+            ],
+            "name": "_EXTERNAL/source/poisson.py"
+        },
+        {
+            "@id": "_EXTERNAL/source/postprocessing.py",
+            "@type": "File",
+            "encodingFormat": "text/x-python",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_2-input-1"
+                }
+            ],
+            "name": "_EXTERNAL/source/postprocessing.py"
+        },
+        {
+            "@id": "_EXTERNAL/source/unit_square.geo",
+            "@type": "File",
+            "encodingFormat": "application/vnd.dynageo",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_5-input-1"
+                }
+            ],
+            "name": "_EXTERNAL/source/unit_square.geo"
+        },
+        {
+            "@id": "preprocessing/square.msh",
+            "@type": "File",
+            "encodingFormat": "model/mesh",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_5-output-1"
+                },
+                {
+                    "@id": "#action_4-input-1"
+                }
+            ],
+            "name": "preprocessing/square.msh"
+        },
+        {
+            "@id": "preprocessing/square.xdmf",
+            "@type": "File",
+            "encodingFormat": "application/octet-stream",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_4-output-1"
+                },
+                {
+                    "@id": "#action_3-input-2"
+                }
+            ],
+            "name": "preprocessing/square.xdmf"
+        },
+        {
+            "@id": "solvePoisson/poisson.xdmf",
+            "@type": "File",
+            "encodingFormat": "application/octet-stream",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_3-output-1"
+                },
+                {
+                    "@id": "#action_2-input-2"
+                }
+            ],
+            "name": "solvePoisson/poisson.xdmf"
+        },
+        {
+            "@id": "solvePoisson/poisson.h5",
+            "@type": "File",
+            "encodingFormat": "application/x-hdf5",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_3-output-2"
+                },
+                {
+                    "@id": "#action_2-input-3"
+                }
+            ],
+            "name": "solvePoisson/poisson.h5"
+        },
+        {
+            "@id": "solvePoisson/poisson.vtu",
+            "@type": "File",
+            "encodingFormat": "model/vnd.vtu",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_3-output-3"
+                },
+                {
+                    "@id": "#action_2-input-4"
+                }
+            ],
+            "name": "solvePoisson/poisson.vtu"
+        },
+        {
+            "@id": "solvePoisson/poisson_p0_000000.vtu",
+            "@type": "File",
+            "encodingFormat": "model/vnd.vtu",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_3-output-4"
+                },
+                {
+                    "@id": "#action_2-input-5"
+                }
+            ],
+            "name": "solvePoisson/poisson_p0_000000.vtu"
+        },
+        {
+            "@id": "solvePoisson/numdofs.txt",
+            "@type": "File",
+            "encodingFormat": "text/plain",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_3-output-5"
+                },
+                {
+                    "@id": "#action_1-input-4"
+                }
+            ],
+            "name": "solvePoisson/numdofs.txt"
+        },
+        {
+            "@id": "postprocessing/plotoverline.csv",
+            "@type": "File",
+            "encodingFormat": "text/csv",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_2-output-1"
+                },
+                {
+                    "@id": "#action_1-input-3"
+                }
+            ],
+            "name": "postprocessing/plotoverline.csv"
+        },
+        {
+            "@id": "_EXTERNAL/source/prepare_paper_macros.py",
+            "@type": "File",
+            "encodingFormat": "text/x-python",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_1-input-1"
+                }
+            ],
+            "name": "_EXTERNAL/source/prepare_paper_macros.py"
+        },
+        {
+            "@id": "_EXTERNAL/source/macros.tex.template",
+            "@type": "File",
+            "encodingFormat": "application/octet-stream",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_1-input-2"
+                }
+            ],
+            "name": "_EXTERNAL/source/macros.tex.template"
+        },
+        {
+            "@id": "macros.tex",
+            "@type": "File",
+            "encodingFormat": "application/x-tex",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_1-output-1"
+                },
+                {
+                    "@id": "#action_0-input-2"
+                }
+            ],
+            "name": "macros.tex"
+        },
+        {
+            "@id": "_EXTERNAL/source/paper.tex",
+            "@type": "File",
+            "encodingFormat": "application/x-tex",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_0-input-1"
+                }
+            ],
+            "name": "_EXTERNAL/source/paper.tex"
+        },
+        {
+            "@id": "paper.tex",
+            "@type": "File",
+            "encodingFormat": "application/x-tex",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_0-output-1"
+                }
+            ],
+            "name": "paper.tex"
+        },
+        {
+            "@id": "paper.pdf",
+            "@type": "File",
+            "encodingFormat": "application/pdf",
+            "exampleOfWork": [
+                {
+                    "@id": "#action_0-output-2"
+                }
+            ],
+            "name": "paper.pdf"
+        },
+        {
+            "@id": "#tool_0",
+            "@type": "SoftwareApplication",
+            "name": "python",
+            "softwareVersion": "3.12"
+        },
+        {
+            "@id": "#tool_1",
+            "@type": "SoftwareApplication",
+            "name": "gmsh",
+            "softwareRequirements": [
+                {
+                    "@id": "#tool_0"
+                },
+                {
+                    "@id": "#tool_2"
+                },
+                {
+                    "@id": "#tool_3"
+                },
+                {
+                    "@id": "#tool_4"
+                },
+                {
+                    "@id": "#tool_5"
+                },
+                {
+                    "@id": "#tool_6"
+                }
+            ]
+        },
+        {
+            "@id": "#tool_2",
+            "@type": "SoftwareApplication",
+            "name": "meshio"
+        },
+        {
+            "@id": "#tool_3",
+            "@type": "SoftwareApplication",
+            "name": "fenics-dolfinx",
+            "softwareVersion": "0.9.*"
+        },
+        {
+            "@id": "#tool_4",
+            "@type": "SoftwareApplication",
+            "name": "vtk",
+            "softwareVersion": "9.3"
+        },
+        {
+            "@id": "#tool_5",
+            "@type": "SoftwareApplication",
+            "name": "numpy"
+        },
+        {
+            "@id": "#tool_6",
+            "@type": "SoftwareApplication",
+            "name": "tectonic"
+        },
+        {
+            "@id": "#snakemake",
+            "@type": "SoftwareApplication",
+            "name": "Snakemake"
+        },
+        {
+            "@id": "https://w3id.org/workflowhub/workflow-ro-crate#snakemake",
+            "@type": "ComputerLanguage",
+            "identifier": {
+                "@id": "https://doi.org/10.1093/bioinformatics/bts480"
+            },
+            "name": "Snakemake",
+            "url": {
+                "@id": "https://snakemake.readthedocs.io"
+            }
+        },
+        {
+            "@id": "#action_workflow_run",
+            "@type": "CreateAction",
+            "endTime": "2026-07-15 15:58:40.409687",
+            "instrument": {
+                "@id": "#snakemake"
+            },
+            "name": "workflow run",
+            "startTime": "2026-07-15 15:56:25.092333"
+        },
+        {
+            "@id": "#action_5-input-1",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "_EXTERNAL/source/unit_square.geo",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_5-output-1",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "preprocessing/square.msh",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_5",
+            "@type": "CreateAction",
+            "endTime": "2026-07-15 15:56:40.585520",
+            "instrument": {
+                "@id": "#tool_1"
+            },
+            "name": "generate_mesh_5",
+            "object": [
+                {
+                    "@id": "_EXTERNAL/source/unit_square.geo"
+                }
+            ],
+            "result": [
+                {
+                    "@id": "preprocessing/square.msh"
+                }
+            ],
+            "startTime": "2026-07-15 15:56:25.092333"
+        },
+        {
+            "@id": "#action_4-input-1",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "preprocessing/square.msh",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_4-output-1",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "preprocessing/square.xdmf",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_4",
+            "@type": "CreateAction",
+            "endTime": "2026-07-15 15:56:51.217094",
+            "instrument": {
+                "@id": "#tool_1"
+            },
+            "name": "convert_to_xdmf_4",
+            "object": [
+                {
+                    "@id": "preprocessing/square.msh"
+                }
+            ],
+            "result": [
+                {
+                    "@id": "preprocessing/square.xdmf"
+                }
+            ],
+            "startTime": "2026-07-15 15:56:40.588063"
+        },
+        {
+            "@id": "#action_3-input-1",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "_EXTERNAL/source/poisson.py",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_3-input-2",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "preprocessing/square.xdmf",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_3-output-1",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "solvePoisson/poisson.xdmf",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_3-output-2",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "solvePoisson/poisson.h5",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_3-output-3",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "solvePoisson/poisson.vtu",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_3-output-4",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "solvePoisson/poisson_p0_000000.vtu",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_3-output-5",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "solvePoisson/numdofs.txt",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_3",
+            "@type": "CreateAction",
+            "endTime": "2026-07-15 15:57:06.471390",
+            "instrument": {
+                "@id": "#tool_1"
+            },
+            "name": "solvePoisson_3",
+            "object": [
+                {
+                    "@id": "_EXTERNAL/source/poisson.py"
+                },
+                {
+                    "@id": "preprocessing/square.xdmf"
+                }
+            ],
+            "result": [
+                {
+                    "@id": "solvePoisson/poisson.xdmf"
+                },
+                {
+                    "@id": "solvePoisson/poisson.h5"
+                },
+                {
+                    "@id": "solvePoisson/poisson.vtu"
+                },
+                {
+                    "@id": "solvePoisson/poisson_p0_000000.vtu"
+                },
+                {
+                    "@id": "solvePoisson/numdofs.txt"
+                }
+            ],
+            "startTime": "2026-07-15 15:56:51.221709"
+        },
+        {
+            "@id": "#action_2-input-1",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "_EXTERNAL/source/postprocessing.py",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_2-input-2",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "solvePoisson/poisson.xdmf",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_2-input-3",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "solvePoisson/poisson.h5",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_2-input-4",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "solvePoisson/poisson.vtu",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_2-input-5",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "solvePoisson/poisson_p0_000000.vtu",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_2-output-1",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "postprocessing/plotoverline.csv",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_2",
+            "@type": "CreateAction",
+            "endTime": "2026-07-15 15:58:34.606159",
+            "instrument": {
+                "@id": "#tool_1"
+            },
+            "name": "postprocessing_2",
+            "object": [
+                {
+                    "@id": "_EXTERNAL/source/postprocessing.py"
+                },
+                {
+                    "@id": "solvePoisson/poisson.xdmf"
+                },
+                {
+                    "@id": "solvePoisson/poisson.h5"
+                },
+                {
+                    "@id": "solvePoisson/poisson.vtu"
+                },
+                {
+                    "@id": "solvePoisson/poisson_p0_000000.vtu"
+                }
+            ],
+            "result": [
+                {
+                    "@id": "postprocessing/plotoverline.csv"
+                }
+            ],
+            "startTime": "2026-07-15 15:57:06.478578"
+        },
+        {
+            "@id": "#action_1-input-1",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "_EXTERNAL/source/prepare_paper_macros.py",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_1-input-2",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "_EXTERNAL/source/macros.tex.template",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_1-input-3",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "postprocessing/plotoverline.csv",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_1-input-4",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "solvePoisson/numdofs.txt",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_1-output-1",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "macros.tex",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_1",
+            "@type": "CreateAction",
+            "endTime": "2026-07-15 15:58:38.387312",
+            "instrument": {
+                "@id": "#tool_1"
+            },
+            "name": "substitute_macros_1",
+            "object": [
+                {
+                    "@id": "_EXTERNAL/source/prepare_paper_macros.py"
+                },
+                {
+                    "@id": "_EXTERNAL/source/macros.tex.template"
+                },
+                {
+                    "@id": "postprocessing/plotoverline.csv"
+                },
+                {
+                    "@id": "solvePoisson/numdofs.txt"
+                }
+            ],
+            "result": [
+                {
+                    "@id": "macros.tex"
+                }
+            ],
+            "startTime": "2026-07-15 15:58:37.296862"
+        },
+        {
+            "@id": "#action_0-input-1",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "_EXTERNAL/source/paper.tex",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_0-input-2",
+            "@type": "FormalParameter",
+            "additionalType": "input",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "input": {
+                "@id": "Snakefile"
+            },
+            "name": "macros.tex",
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_0-output-1",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "paper.tex",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_0-output-2",
+            "@type": "FormalParameter",
+            "additionalType": "output",
+            "conformsTo": {
+                "@id": "https://bioschemas.org/profiles/FormalParameter/1.0-RELEASE"
+            },
+            "name": "paper.pdf",
+            "output": {
+                "@id": "Snakefile"
+            },
+            "valueRequired": false
+        },
+        {
+            "@id": "#action_0",
+            "@type": "CreateAction",
+            "endTime": "2026-07-15 15:58:40.409687",
+            "instrument": {
+                "@id": "#tool_1"
+            },
+            "name": "compile_paper_0",
+            "object": [
+                {
+                    "@id": "_EXTERNAL/source/paper.tex"
+                },
+                {
+                    "@id": "macros.tex"
+                }
+            ],
+            "result": [
+                {
+                    "@id": "paper.tex"
+                },
+                {
+                    "@id": "paper.pdf"
+                }
+            ],
+            "startTime": "2026-07-15 15:58:38.397552"
+        },
+        {
+            "@id": "https://w3id.org/ro/wfrun/process/0.5",
+            "@type": "CreativeWork",
+            "name": "Process Run Crate",
+            "version": "0.5"
+        },
+        {
+            "@id": "https://w3id.org/ro/wfrun/workflow/0.5",
+            "@type": "CreativeWork",
+            "name": "Workflow Run Crate",
+            "version": "0.5"
+        },
+        {
+            "@id": "https://w3id.org/ro/wfrun/provenance/0.5",
+            "@type": "CreativeWork",
+            "name": "Provenance Run Crate",
+            "version": "0.5"
+        },
+        {
+            "@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0",
+            "@type": "CreativeWork",
+            "name": "Workflow RO-Crate",
+            "version": "1.0"
+        }
+    ]
+}

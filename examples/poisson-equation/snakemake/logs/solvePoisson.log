@@ -1,0 +1,4 @@
+Number of dofs used: 357
+xdmf_filename solvePoisson/poisson.xdmf
+Opened XDMF file for writing at: /Users/mahdi/Documents/GitHub/snakemake-report-plugin-metadata4ing/examples/benchmarks/Poisson/snakemake/solvePoisson/poisson.xdmf
+Current working directory: /Users/mahdi/Documents/GitHub/snakemake-report-plugin-metadata4ing/examples/benchmarks/Poisson/snakemake

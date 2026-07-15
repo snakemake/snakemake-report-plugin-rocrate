@@ -1,7 +1,6 @@
 """Snakemake report plugin for Provenance Run RO-Crates."""
 
 from dataclasses import dataclass, field
-from pathlib import Path
 
 from snakemake_interface_report_plugins.reporter import ReporterBase
 from snakemake_interface_report_plugins.settings import ReportSettingsBase
@@ -109,11 +108,11 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
 
 class Reporter(ReporterBase):  # type: ignore[misc]
     """Generate and validate a Provenance Run RO-Crate."""
-
     settings: ReportSettings
     external_directory_name = "_EXTERNAL"
 
     def render(self) -> None:
+        
         if self.settings.filename:
             validate_filename(str(self.settings.filename))
 

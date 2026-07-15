@@ -100,7 +100,9 @@ entity and can be used even when no ROR identifier is supplied.
 Sets the organization's website URL. It is recorded directly from the supplied
 value without making a network request.
 
-## Running the example
+## Running the examples
+
+### Linear-elastic plate with a hole
 
 The repository includes a FEniCS/DOLFINx workflow for a linear-elastic plate
 with a hole. From the repository root, navigate to the example and generate the RO-Crate:
@@ -123,12 +125,33 @@ snakemake \
 
 The reporter writes `workflow-run.zip` in the example directory.
 
-The remaining command-line arguments are standard Snakemake options:
+### Poisson equation
 
-- `--reporter rocrate` selects this report plugin.
-- `--software-deployment-method conda` enables the Conda environments declared
-  by the workflow.
-- `--cores 1` allows Snakemake to use one CPU core.
+The repository also includes a workflow that solves the Poisson equation,
+post-processes the solution, and compiles the results into a PDF. From the
+repository root, run:
+
+```bash
+cd examples/poisson-equation/snakemake
+
+snakemake paper.pdf \
+  --software-deployment-method conda \
+  --reporter rocrate \
+  --report-rocrate-filename "poisson-equation-workflow-run" \
+  --report-rocrate-run-name "Poisson equation" \
+  --report-rocrate-run-license "MIT" \
+  --report-rocrate-main-tool "gmsh" \
+  --report-rocrate-organization-ror "https://ror.org/04vnq7t77" \
+  --report-rocrate-organization-name "University of Stuttgart" \
+  --report-rocrate-organization-url "https://www.uni-stuttgart.de/en/" \
+  --cores 1 \
+  --use-conda
+```
+
+The reporter writes `poisson-equation-workflow-run.zip` in the example
+directory. See the [example README](examples/poisson-equation/snakemake/README.md)
+for more information about the workflow and its configuration.
+
 
 For usage instructions, see the documentation:
 
