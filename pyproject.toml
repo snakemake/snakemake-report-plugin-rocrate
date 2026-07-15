@@ -3,6 +3,7 @@ name = "snakemake-report-plugin-rocrate"
 version = "0.1.0"
 authors = [
     { name = "Felix Bartusch", email = "felix.bartusch@uni-tuebingen.de" },
+    { name = "Mahdi Jafarkhani", email = "mahdi.jafarkhani@tik.uni-stuttgart.de" }
 ]
 description = "Snakemake Report Plugin to automatically create Workflow Run RO-Crates"
 urls = { Repository = "https://github.com/snakemake/snakemake-report-plugin-rocrate", Documentation = "https://snakemake.github.io/snakemake-plugin-catalog/plugins/report/rocrate.html" }
