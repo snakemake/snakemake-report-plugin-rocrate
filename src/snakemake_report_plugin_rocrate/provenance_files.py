@@ -117,6 +117,7 @@ class FileProvenanceHelpers:
                     continue
                 if tokens[i - 1] in {"-c", "-e", "--command"}:
                     # inline code/command, not a file
+                    start_idx = i + 1
                     break
                 script_path = tok
                 start_idx = i + 1
