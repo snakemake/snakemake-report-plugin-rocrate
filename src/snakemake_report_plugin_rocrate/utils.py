@@ -5,7 +5,6 @@ they can be reused in both provenance extraction and crate-building code.
 """
 
 import mimetypes
-import os
 import re
 from pathlib import Path
 
@@ -59,5 +58,5 @@ def validate_filename(filename: str) -> None:
     if filename.upper().split(".")[0] in reserved_names:
         raise ValueError(f"Filename '{filename}' is reserved on Windows.")
 
-    if os.path.isdir(filename):
+    if Path(filename).is_dir():
         raise ValueError(f"'{filename}' is a directory, not a file.")

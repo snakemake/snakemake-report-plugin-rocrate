@@ -2,17 +2,22 @@
 $ pvbatch postprocessing.py -h
 """
 
-import sys
 import argparse
+import logging
+import sys
+
+import numpy as np
 import vtk
 from vtk.util.numpy_support import vtk_to_numpy
-import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def main(args):
     import os
+
     vtu_file = os.path.expanduser(args.vtu)
-    
+
     # Read VTU file using VTK directly
     try:
         reader = vtk.vtkXMLUnstructuredGridReader()
@@ -20,16 +25,18 @@ def main(args):
         reader.Update()
         mesh = reader.GetOutput()
         if mesh is None or mesh.GetNumberOfPoints() == 0:
-            raise ValueError("VTK returned empty mesh - file format may be unsupported or corrupted")
-        
+            raise ValueError(
+                "VTK returned empty mesh - file format may be unsupported or corrupted"
+            )
+
     except Exception as e:
-        print(f"Failed to read VTU file: {e}")
+        logger.info(f"Failed to read VTU file: {e}")
         sys.exit(1)
 
     # Query available arrays
     point_data = mesh.GetPointData()
     cell_data = mesh.GetCellData()
-    
+
     try:
         point_arrays = [point_data.GetArrayName(i) for i in range(point_data.GetNumberOfArrays())]
         cell_arrays = [cell_data.GetArrayName(i) for i in range(cell_data.GetNumberOfArrays())]
@@ -37,11 +44,11 @@ def main(args):
         if args.field in point_arrays:
             array_type = "point"
         elif args.field in cell_arrays:
-            array_type = "cell"
+            array_type = "cell"  # noqa: F841
         else:
-            print(f"Error: Field '{args.field}' not found in point or cell arrays.")
-            print(f"Available point arrays: {point_arrays}")
-            print(f"Available cell arrays: {cell_arrays}")
+            logger.info(f"Error: Field '{args.field}' not found in point or cell arrays.")
+            logger.info(f"Available point arrays: {point_arrays}")
+            logger.info(f"Available cell arrays: {cell_arrays}")
             sys.exit(1)
 
         # Create points along a line using vtkLineSource (2D: z=0)
@@ -58,42 +65,42 @@ def main(args):
         probe_filter.SetSourceData(mesh)
         probe_filter.SetInputData(probe_polydata)
         probe_filter.Update()
-        
+
         # Get results
         result = probe_filter.GetOutput()
         sampled_points = vtk_to_numpy(result.GetPoints().GetData())
-        
+
         # Get field data
         if args.field in point_arrays:
             field_array = result.GetPointData().GetArray(args.field)
         else:
             field_array = result.GetCellData().GetArray(args.field)
-        
+
         if field_array is None:
-            print(f"Error: Field '{args.field}' not found in sampled data.")
+            logger.info(f"Error: Field '{args.field}' not found in sampled data.")
             sys.exit(1)
-        
+
         field_data = vtk_to_numpy(field_array)
 
         # Prepare data for CSV using numpy instead of pandas
         arc_length = np.linalg.norm(sampled_points - sampled_points[0], axis=1)
-        
+
         # Check for valid mask in VTK results
         valid_mask_array = result.GetPointData().GetArray("vtkValidPointMask")
         if valid_mask_array is not None:
             valid_mask = vtk_to_numpy(valid_mask_array)
             if not np.all(valid_mask == 1):
-                print("Error: Not all probe points are valid (some are outside the mesh).")
+                logger.info("Error: Not all probe points are valid (some are outside the mesh).")
                 sys.exit(1)
 
         # Write CSV manually using numpy
         header = ["arc_length", args.field]
         data_array = np.column_stack([arc_length, field_data])
-        
-        np.savetxt(args.csv, data_array, delimiter=',', header=','.join(header), comments='')
-        print(f"Data successfully written to {args.csv}")
+
+        np.savetxt(args.csv, data_array, delimiter=",", header=",".join(header), comments="")
+        logger.info(f"Data successfully written to {args.csv}")
     except Exception as e:
-        print(f"Postprocessing error: {e}")
+        logger.info(f"Postprocessing error: {e}")
         sys.exit(1)
 
 
@@ -104,23 +111,18 @@ if __name__ == "__main__":
         usage="%(prog)s [options] vtu csv",
     )
 
-    parser.add_argument("vtu", type=str, nargs='?', 
-                        default="poisson.vtu",
-                        help="The source vtu filepath.")
-    parser.add_argument("csv", type=str, nargs='?', 
-                        default="plotoverline.csv", 
-                        help="The target csv filepath.")
+    parser.add_argument(
+        "vtu", type=str, nargs="?", default="poisson.vtu", help="The source vtu filepath."
+    )
+    parser.add_argument(
+        "csv", type=str, nargs="?", default="plotoverline.csv", help="The target csv filepath."
+    )
     parser.add_argument(
         "--field",
         type=str,
         default="u",
         help="Field variable to plot (default: u)",
     )
-    
+
     args = parser.parse_args(sys.argv[1:])
     main(args)
-
-
-
-
-

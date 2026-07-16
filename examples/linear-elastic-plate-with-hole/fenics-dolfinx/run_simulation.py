@@ -1,4 +1,5 @@
 import json
+import logging
 import sys
 
 import dolfinx as df
@@ -7,6 +8,8 @@ import ufl
 from dolfinx.fem.petsc import LinearProblem
 from mpi4py import MPI
 from pint import UnitRegistry
+
+logger = logging.getLogger(__name__)
 
 
 class PlateWithHoleSolution:
@@ -37,13 +40,9 @@ class PlateWithHoleSolution:
 
         fac = 2 * np.pow(a / r, 3)
 
-        ux = Ta_8mu * (
-            r / a * (k + 1.0) * ct + 2.0 * a / r * ((1.0 + k) * ct + c3t) - fac * c3t
-        )
+        ux = Ta_8mu * (r / a * (k + 1.0) * ct + 2.0 * a / r * ((1.0 + k) * ct + c3t) - fac * c3t)
 
-        uy = Ta_8mu * (
-            (r / a) * (k - 3.0) * st + 2.0 * a / r * ((1.0 - k) * st + s3t) - fac * s3t
-        )
+        uy = Ta_8mu * ((r / a) * (k - 3.0) * st + 2.0 * a / r * ((1.0 - k) * st + s3t) - fac * s3t)
 
         return ux, uy
 
@@ -98,16 +97,12 @@ bc_bottom = df.fem.dirichletbc(0.0, dofs_bottom, V.sub(1))
 
 
 E = (
-    ureg.Quantity(
-        parameters["young-modulus"]["value"], parameters["young-modulus"]["unit"]
-    )
+    ureg.Quantity(parameters["young-modulus"]["value"], parameters["young-modulus"]["unit"])
     .to_base_units()
     .magnitude
 )
 nu = (
-    ureg.Quantity(
-        parameters["poisson-ratio"]["value"], parameters["poisson-ratio"]["unit"]
-    )
+    ureg.Quantity(parameters["poisson-ratio"]["value"], parameters["poisson-ratio"]["unit"])
     .to_base_units()
     .magnitude
 )
@@ -122,9 +117,7 @@ L = (
     .magnitude
 )
 load = (
-    ureg.Quantity(parameters["load"]["value"], parameters["load"]["unit"])
-    .to_base_units()
-    .magnitude
+    ureg.Quantity(parameters["load"]["value"], parameters["load"]["unit"]).to_base_units().magnitude
 )
 
 solution = PlateWithHoleSolution(
@@ -143,11 +136,7 @@ def eps(v):
 def sigma(v):
     # plane stress
     epsilon = eps(v)
-    return (
-        E
-        / (1.0 - nu**2)
-        * ((1.0 - nu) * epsilon + nu * ufl.tr(epsilon) * ufl.Identity(2))
-    )
+    return E / (1.0 - nu**2) * ((1.0 - nu) * epsilon + nu * ufl.tr(epsilon) * ufl.Identity(2))
 
 
 def as_tensor(v):
@@ -168,8 +157,8 @@ ds = ufl.Measure(
 )
 stress_space = df.fem.functionspace(mesh, ("CG", parameters["element-degree"], (2, 2)))
 stress_function = df.fem.Function(stress_space)
-#stress_function.interpolate(lambda x: solution.stress(x))
-#stress_function.x.scatter_forward()
+# stress_function.interpolate(lambda x: solution.stress(x))
+# stress_function.x.scatter_forward()
 
 u = df.fem.Function(V, name="u")
 u_prescribed = df.fem.Function(V, name="u_prescribed")
@@ -183,7 +172,7 @@ a = df.fem.form(ufl.inner(sigma(u_), eps(v_)) * dx)
 
 
 f = df.fem.form(ufl.inner(ufl.dot(stress_function, ufl.FacetNormal(mesh)), u_) * ufl.ds)
-#f = df.fem.form(ufl.inner(ufl.Constant(mesh, ((0.0),(0.0))), u_) * ufl.ds)
+# f = df.fem.form(ufl.inner(ufl.Constant(mesh, ((0.0),(0.0))), u_) * ufl.ds)
 
 bc_right = df.fem.dirichletbc(u_prescribed, dofs_right)
 bc_top = df.fem.dirichletbc(u_prescribed, dofs_top)
@@ -228,24 +217,31 @@ def project(
     uh = solver.solve()
     return uh
 
-#space_type = "CG" if parameters["element-degree"] > 1 else "DG"
-plot_space = df.fem.functionspace(mesh, ("DG", parameters["element-degree"]-1, (2,2)))
-plot_space_mises = df.fem.functionspace(mesh, ("DG", parameters["element-degree"]-1, (1,)))
+
+# space_type = "CG" if parameters["element-degree"] > 1 else "DG"
+plot_space = df.fem.functionspace(mesh, ("DG", parameters["element-degree"] - 1, (2, 2)))
+plot_space_mises = df.fem.functionspace(mesh, ("DG", parameters["element-degree"] - 1, (1,)))
 stress_nodes_red = project(sigma(u), plot_space, dx)
 stress_nodes_red.name = "stress"
+
 
 def mises_stress(u):
     stress = sigma(u)
     p = ufl.tr(stress) / 3.0
     s = stress - p * ufl.Identity(2)
-    return ufl.as_vector([(3.0 / 2.0)**0.5 * (ufl.inner(s, s) + p*p)**0.5,])
-print("mises_stress(u) = ", mises_stress(u).ufl_shape)
+    return ufl.as_vector(
+        [
+            (3.0 / 2.0) ** 0.5 * (ufl.inner(s, s) + p * p) ** 0.5,
+        ]
+    )
+
+
+logger.info("mises_stress(u) = ", mises_stress(u).ufl_shape)
 mises_stress_nodes = project(mises_stress(u), plot_space_mises, dx)
 mises_stress_nodes.name = "von_mises_stress"
-#stress_nodes = df.fem.Function(stress_space, name="stress")
-#stress_nodes.interpolate(stress_nodes_red)
+# stress_nodes = df.fem.Function(stress_space, name="stress")
+# stress_nodes.interpolate(stress_nodes_red)
 
 with df.io.VTKFile(MPI.COMM_WORLD, f"data/output_{name}.vtk", "w") as vtk:
     vtk.write_function([u], 0.0)
-    vtk.write_function([stress_nodes_red, mises_stress_nodes
-                        ], 0.0)
+    vtk.write_function([stress_nodes_red, mises_stress_nodes], 0.0)

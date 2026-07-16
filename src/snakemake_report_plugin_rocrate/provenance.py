@@ -153,9 +153,7 @@ class ProvenanceBuilder(
             node=node,
             file_nodes=file_nodes,
         )
-        node["realizes method"] = {
-            "@id": self._create_method_node(job, optional_fields)
-        }
+        node["realizes method"] = {"@id": self._create_method_node(job, optional_fields)}
         self._add_snakefile_supplemental_file()
         return node
 

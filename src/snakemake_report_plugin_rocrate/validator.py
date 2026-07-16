@@ -49,6 +49,4 @@ def validate_rocrate(
         snakemake_logger.error(message)
         raise WorkflowError(message)
 
-    snakemake_logger.info(
-        "RO-Crate validation succeeded for profile %s.", profile_identifier
-    )
+    snakemake_logger.info("RO-Crate validation succeeded for profile %s.", profile_identifier)

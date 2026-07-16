@@ -127,9 +127,7 @@ class ToolResolver:
                 check=True,
             )
             all_packages = json.loads(result.stdout)
-            self._packages_by_env[env_path] = {
-                pkg["name"]: pkg["version"] for pkg in all_packages
-            }
+            self._packages_by_env[env_path] = {pkg["name"]: pkg["version"] for pkg in all_packages}
         return {
             pkg_name: version
             for pkg_name, version in self._packages_by_env[env_path].items()

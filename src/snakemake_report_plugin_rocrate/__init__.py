@@ -108,11 +108,12 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
 
 class Reporter(ReporterBase):  # type: ignore[misc]
     """Generate and validate a Provenance Run RO-Crate."""
+
     settings: ReportSettings
     external_directory_name = "_EXTERNAL"
 
     def render(self) -> None:
-        
+
         if self.settings.filename:
             validate_filename(str(self.settings.filename))
 
@@ -129,6 +130,4 @@ class Reporter(ReporterBase):  # type: ignore[misc]
                 settings=self.settings,
             )
             crate_path = crate_builder.write(provenance)
-            validate_rocrate(
-                crate_path, profile_identifier=PROVENANCE_RUN_CRATE_PROFILE
-            )
+            validate_rocrate(crate_path, profile_identifier=PROVENANCE_RUN_CRATE_PROFILE)

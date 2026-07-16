@@ -147,7 +147,7 @@ class FileProvenanceHelpers:
 
     def _is_file(self, file_name: str) -> bool:
         """Return whether a path currently exists as a regular file."""
-        return os.path.isfile(file_name)
+        return Path(file_name).is_file()
 
     def _copy_external_relative_files(self, path_str) -> str:
         """Copy external files into the workspace while preserving structure."""

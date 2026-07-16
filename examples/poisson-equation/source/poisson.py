@@ -2,17 +2,20 @@
 solution of the poisson equation on the unit square
 """
 
+import logging
+import sys
 from argparse import ArgumentParser
-import numpy as np
+
 import dolfinx
-import dolfinx.io
 import dolfinx.fem as fem
-from dolfinx.fem.petsc import LinearProblem as LinearProblem
-import dolfinx.mesh as mesh
+import dolfinx.io
+import numpy as np
 import ufl
+from dolfinx.fem.petsc import LinearProblem as LinearProblem
 from mpi4py import MPI
 from petsc4py import PETSc
-import sys
+
+logger = logging.getLogger(__name__)
 
 
 def boundary_expression():
@@ -20,9 +23,7 @@ def boundary_expression():
     return lambda x: 1.0 + x[0] ** 2 + 2.0 * x[1] ** 2
 
 
-def solve_poisson(
-    meshfile: str, degree: int, bc_expression=boundary_expression()
-):
+def solve_poisson(meshfile: str, degree: int, bc_expression=boundary_expression()):  # noqa: B008
     """solves the poisson equation
 
     Parameters
@@ -59,7 +60,9 @@ def solve_poisson(
 
     # Solve
     uh = fem.Function(V)
-    problem = LinearProblem(a, L, bcs=[bc], u=uh, petsc_options={"ksp_type": "cg", "pc_type": "hypre"})
+    problem = LinearProblem(
+        a, L, bcs=[bc], u=uh, petsc_options={"ksp_type": "cg", "pc_type": "hypre"}
+    )
     uh = problem.solve()
     return uh
 
@@ -86,22 +89,22 @@ def solve_and_write_output(
     uh = solve_poisson(meshfile, degree)
     V = uh.function_space
     dofs = V.dofmap.index_map.size_global * V.dofmap.index_map_bs
-    print(f"Number of dofs used: {dofs}")
+    logger.info(f"Number of dofs used: {dofs}")
     sys.stdout.flush()
 
     # Set the solution field name to "u"
     uh.name = "u"
 
     # write XDMF using dolfinx native writer for compatibility
-    xdmf_filename = outputfile.replace('.vtu', '.xdmf').replace('.vtk', '.xdmf')
-    if not xdmf_filename.endswith('.xdmf'):
-        xdmf_filename = outputfile + '.xdmf'
-    
+    xdmf_filename = outputfile.replace(".vtu", ".xdmf").replace(".vtk", ".xdmf")
+    if not xdmf_filename.endswith(".xdmf"):
+        xdmf_filename = outputfile + ".xdmf"
+
     # write VTK for visualization and postprocessing
-    vtk_filename = outputfile.replace('.xdmf', '.vtu').replace('.vtk', '.vtu')
-    if not vtk_filename.endswith('.vtu'):
-        vtk_filename = outputfile + '.vtu'
-    
+    vtk_filename = outputfile.replace(".xdmf", ".vtu").replace(".vtk", ".vtu")
+    if not vtk_filename.endswith(".vtu"):
+        vtk_filename = outputfile + ".vtu"
+
     # Get mesh geometry degree (fallback to 1 if not found)
     mesh_degree = getattr(V.mesh.geometry, "degree", 1)
 
@@ -118,16 +121,17 @@ def solve_and_write_output(
             else:
                 vtk.write_function(uh)
     except Exception as e:
-        print(f"Error writing vtk files: {e}", file=sys.stderr)
+        logger.info(f"Error writing vtk files: {e}", file=sys.stderr)
         sys.stderr.flush()
 
-    try:        
+    try:
         with dolfinx.io.XDMFFile(MPI.COMM_WORLD, xdmf_filename, "w") as xdmf:
             import os
-            print("xdmf_filename", xdmf_filename)
-            print(f"Opened XDMF file for writing at: {os.path.abspath(xdmf_filename)}")
+
+            logger.info("xdmf_filename", xdmf_filename)
+            logger.info(f"Opened XDMF file for writing at: {os.path.abspath(xdmf_filename)}")
             xdmf.write_mesh(V.mesh)
-            
+
             if mesh_degree != degree:
                 # Interpolate uh to a function space matching the mesh degree
                 V1 = fem.functionspace(V.mesh, ("CG", mesh_degree))
@@ -138,40 +142,45 @@ def solve_and_write_output(
             else:
                 xdmf.write_function(uh)
     except Exception as e:
-        print(f"Error writing xdmf/h5 files: {e}", file=sys.stderr)
+        logger.info(f"Error writing xdmf/h5 files: {e}", file=sys.stderr)
         sys.stderr.flush()
 
     import os
-    print("Current working directory:", os.getcwd())
 
-   # Check that output files actually exist and are readable
+    logger.info("Current working directory:", os.getcwd())
+
+    # Check that output files actually exist and are readable
     import os
+
     # Generate expected output filenames
     outdir = os.path.dirname(outputfile)
     required_files = [
         os.path.join(outdir, "poisson.xdmf"),
         os.path.join(outdir, "poisson.h5"),
         os.path.join(outdir, "poisson.vtu"),
-        os.path.join(outdir, "poisson_p0_000000.vtu")]
-    
+        os.path.join(outdir, "poisson_p0_000000.vtu"),
+    ]
+
     missing_files = [f for f in required_files if not os.path.exists(f)]
-    
+
     if missing_files:
         raise RuntimeError(f"Missing output file(s): {', '.join(missing_files)}")
-    
+
     # Try to open each file to verify they're readable
     for file_path in required_files:
         try:
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 # Just attempt to read a small part to verify file is accessible
                 f.read(10)
         except Exception as e:
-            print(f"Warning: File {file_path} exists but cannot be read: {e}", file=sys.stderr)
+            logger.info(
+                f"Warning: File {file_path} exists but cannot be read: {e}", file=sys.stderr
+            )
             sys.stderr.flush()
 
     if numdofs is not None and MPI.COMM_WORLD.rank == 0:
         with open(numdofs, "w") as handle:
-            handle.write("{}\n".format(dofs))
+            handle.write(f"{dofs}\n")
     if return_dofs:
         return dofs
 
@@ -179,9 +188,7 @@ def solve_and_write_output(
 if __name__ == "__main__":
     PARSER = ArgumentParser(description="run script for the poisson problem")
     PARSER.add_argument("-m", "--mesh", required=True, help="mesh file to be used")
-    PARSER.add_argument(
-        "-d", "--degree", required=True, help="polynomial order to be used"
-    )
+    PARSER.add_argument("-d", "--degree", required=True, help="polynomial order to be used")
     PARSER.add_argument(
         "-o",
         "--outputfile",
@@ -197,6 +204,4 @@ if __name__ == "__main__":
     )
     ARGS = vars(PARSER.parse_args())
 
-    solve_and_write_output(
-        ARGS["mesh"], int(ARGS["degree"]), ARGS["outputfile"], ARGS["num_dofs"]
-    )
+    solve_and_write_output(ARGS["mesh"], int(ARGS["degree"]), ARGS["outputfile"], ARGS["num_dofs"])

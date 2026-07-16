@@ -35,6 +35,10 @@ platforms = [ "linux-64",]
 path = "."
 editable = true
 
+[tool.pixi.feature.dev.dependencies]
+pip = "*"
+packaging = "<26"  # snakemake>=9.17.2 depends on packaging>=24.0,<26
+
 # Dependencies for the different supported Python versions.
 # These are used in CI to test the plugin against all supported Python versions.
 [tool.pixi.feature.py311.dependencies]
@@ -71,20 +75,31 @@ solve-group = "py313"
 features = ["dev", "py314"]
 solve-group = "py314"
 
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
 [tool.ruff.lint]
 select = [
-    "E",
-    "W", 
-    "F",
-    "I",    # isort — import sorting
-    "ANN",
-    "UP",
+    "E",     # pycodestyle: errors
+    "W",     # pycodestyle: warnings
+    "F",     # Pyflakes: undefined names, unused imports, etc.
+    "I",     # isort: import sorting
+    "ANN",   # flake8-annotations: missing/incorrect type annotations
+    "UP",    # pyupgrade: use modern syntax for the supported Python versions
+    "B",     # flake8-bugbear: likely bugs and design problems
+    "SIM",   # flake8-simplify: unnecessarily complex constructs
+    "RUF",   # ruff-specific rules not covered by the above
+    "T20",   # flake8-print: disallow stray print() calls
+    "PTH",   # flake8-use-pathlib: prefer pathlib over os.path
+    "PT",    # flake8-pytest-style: pytest usage conventions
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# The provenance pipeline handles Snakemake runtime objects and JSON-LD payloads
-# whose concrete types are supplied dynamically by their respective frameworks.
+# Ignore type annotations for the time beeing.
 "src/snakemake_report_plugin_rocrate/*.py" = ["ANN"]
+"examples/*" = ["ANN", "PTH"]
+
 
 [tool.mypy]
 python_version = "3.11"
@@ -130,9 +145,14 @@ format = "ruff format"
 typecheck = "mypy src/"
 test = "pytest --cov=snakemake_report_plugin_rocrate --cov-report=xml:coverage-report/coverage.xml --cov-report=term-missing tests/"
 
+# Faster subset of CI pipeline
+check = { depends-on = ["format-check", "lint", "typecheck", "test"] }
+
 # This resembles the basic CI pipeline. Run
-#   pixi run -e dev check
+#   pixi run -e dev ci
 # before pushing to main.
-check = { depends-on = ["format-check", "lint", "test"] }
+ci = "bash scripts/ci-local.sh"
+
 build = "python -m build"
-check-build = { cmd = "python -m twine check dist/*", depends-on = ["build"] }
+check-build = { cmd = "python -m twine check dist/*", depends-on = ["build"]}
+verify-install = "python -m pip install --no-deps --force-reinstall dist/*.whl && python -c 'import snakemake_report_plugin_rocrate'"

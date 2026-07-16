@@ -26,9 +26,7 @@ from snakemake_report_plugin_rocrate.utils import get_mime_type
 PROVENANCE_RUN_CRATE_PROFILE = "provenance-run-crate-0.5"
 WORKFLOW_RUN_CONTEXT = "https://w3id.org/ro/terms/workflow-run/context"
 DEFAULT_PROVENANCE_RUN_CRATE_NAME = "Snakemake Provenance Run"
-DEFAULT_PROVENANCE_RUN_CRATE_DESCRIPTION = (
-    "RO-Crate describing a Snakemake workflow run."
-)
+DEFAULT_PROVENANCE_RUN_CRATE_DESCRIPTION = "RO-Crate describing a Snakemake workflow run."
 
 
 class ProvenanceRunCrateBuilder:
@@ -323,8 +321,7 @@ class ProvenanceRunCrateBuilder:
         if requested_name and not matching_ids:
             available = ", ".join(sorted(tools))
             raise WorkflowError(
-                f"Main tool '{requested_name}' was not found. "
-                f"Available tools: {available}."
+                f"Main tool '{requested_name}' was not found. Available tools: {available}."
             )
         if not requested_name and len(tool_id_map) > 1:
             available = ", ".join(sorted(tools))
@@ -333,14 +330,10 @@ class ProvenanceRunCrateBuilder:
                 f"--report-rocrate-main-tool. Available tools: {available}."
             )
 
-        self.main_tool_id = (
-            matching_ids[0] if matching_ids else next(iter(tool_id_map.values()))
-        )
+        self.main_tool_id = matching_ids[0] if matching_ids else next(iter(tool_id_map.values()))
         main_tool = self.crate.get(self.main_tool_id)
         requirements = [
-            {"@id": tool_id}
-            for tool_id in tool_id_map.values()
-            if tool_id != self.main_tool_id
+            {"@id": tool_id} for tool_id in tool_id_map.values() if tool_id != self.main_tool_id
         ]
         if main_tool is not None and requirements:
             main_tool["softwareRequirements"] = requirements
@@ -667,9 +660,7 @@ class ProvenanceRunCrateBuilder:
             return instrument_ids[0]
         return {"@id": fallback_tool_id}
 
-    def _add_workflow(
-        self, provenance: ProvenanceResult, fallback_tool_id: str
-    ) -> str | None:
+    def _add_workflow(self, provenance: ProvenanceResult, fallback_tool_id: str) -> str | None:
         """Add the Snakefile as the main workflow entity when available.
 
         Args:

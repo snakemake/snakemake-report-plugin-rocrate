@@ -1,9 +1,11 @@
 import json
+import logging
 import sys
 
 import gmsh
 from pint import UnitRegistry
 
+logger = logging.getLogger(__name__)
 ureg = UnitRegistry()
 
 
@@ -15,7 +17,7 @@ parameter_file = sys.argv[3]
 # Load parameters
 with open(parameter_file) as f:
     parameters = json.load(f)
-print(parameters)
+logger.info(parameters)
 
 length = (
     ureg.Quantity(parameters["length"]["value"], parameters["length"]["unit"])
@@ -42,9 +44,7 @@ gmsh.initialize()
 gmsh.model.add(name)
 
 element_size = (
-    ureg.Quantity(
-        parameters["element-size"]["value"], parameters["element-size"]["unit"]
-    )
+    ureg.Quantity(parameters["element-size"]["value"], parameters["element-size"]["unit"])
     .to_base_units()
     .magnitude
 )

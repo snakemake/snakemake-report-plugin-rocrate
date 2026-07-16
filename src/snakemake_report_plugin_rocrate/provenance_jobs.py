@@ -19,11 +19,7 @@ class JobMetadataHelpers:
 
     def _job_conda_files(self, job) -> list[Any]:
         """Collect conda environment descriptors for a job."""
-        return [
-            dag_job.conda_env
-            for dag_job in self.dag.jobs
-            if dag_job.jobid == job.job.jobid
-        ]
+        return [dag_job.conda_env for dag_job in self.dag.jobs if dag_job.jobid == job.job.jobid]
 
     def _job_shell_commands(self, job) -> list[str]:
         """Collect shell commands associated with a job."""

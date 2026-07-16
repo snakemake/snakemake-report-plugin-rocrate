@@ -27,9 +27,7 @@ class ProvenanceGraphHelpers:
         actions = list(self.state.actions.values())
         for source in actions:
             output_ids = {
-                ref.get("@id")
-                for ref in source.get("has output", [])
-                if isinstance(ref, dict)
+                ref.get("@id") for ref in source.get("has output", []) if isinstance(ref, dict)
             }
             if not output_ids:
                 continue
@@ -37,9 +35,7 @@ class ProvenanceGraphHelpers:
                 if source is target:
                     continue
                 input_ids = {
-                    ref.get("@id")
-                    for ref in target.get("has input", [])
-                    if isinstance(ref, dict)
+                    ref.get("@id") for ref in target.get("has input", []) if isinstance(ref, dict)
                 }
                 if output_ids & input_ids:
                     source.setdefault("precedes", []).append({"@id": target["@id"]})
