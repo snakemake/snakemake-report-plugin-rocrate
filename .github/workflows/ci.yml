@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: latest
+          environments: dev
+          cache: true
+
+      - name: Check formatting
+        run: pixi run -e dev format-check
+
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: latest
+          environments: dev
+          cache: true
+
+      - name: Run ruff
+        run: pixi run -e dev lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: latest
+          environments: dev
+          cache: true
+
+      - name: Run mypy
+        run: pixi run -e dev typecheck
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: latest
+          environments: dev
+          cache: true
+
+      - name: Check build
+        run: pixi run -e dev check-build
+
+      - name: Upload built wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  verify-install:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [test-py311, test-py312, test-py313, test-py314]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download built wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: latest
+          environments: ${{ matrix.environment }}
+          cache: true
+
+      - name: Verify install and import
+        run: pixi run -e ${{ matrix.environment }} verify-install
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [test-py311, test-py312, test-py313, test-py314]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: latest
+          environments: ${{ matrix.environment }}
+          cache: true
+
+      - name: Run tests
+        run: pixi run -e ${{ matrix.environment }} test

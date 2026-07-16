@@ -5,9 +5,6 @@
 # Builds
 dist/
 
-# Ignore GitHub CI for the time beeing
-.github/workflows
-
 # pytest / coverage
 .coverage
 coverage-report/
