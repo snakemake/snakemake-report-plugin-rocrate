@@ -164,6 +164,9 @@ class FileProvenanceHelpers:
         relative_structure = Path(original_path).relative_to(common_root)
         target_path = Path(self.external_directory_name) / relative_structure
 
+        if target_path.exists() and target_path.stat().st_size == original_path.stat().st_size:
+            return str(target_path)
+
         target_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(original_path, target_path)
 
