@@ -169,14 +169,20 @@ class FileProvenanceHelpers:
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Attempt to copy the file, but handle read-only scenarios gracefully
-        # Fixes #5
+        # Skip physical re-copying if the file already exists with matching size.
+        # Fixes `#5`
+        if target_path.exists() and target_path.stat().st_size == original_path.stat().st_size:
+            return str(target_path)
+
         try:
             shutil.copy2(original_path, target_path)
         except PermissionError:
-            logger.warning(
-                "Cannot overwrite read-only file %s; keeping existing copy.",
-                target_path,
-            )
+            if target_path.exists():
+                logger.warning(
+                    "Cannot overwrite read-only file %s; keeping existing copy.",
+                    target_path,
+                )
+            else:
+                raise
 
         return str(target_path)
