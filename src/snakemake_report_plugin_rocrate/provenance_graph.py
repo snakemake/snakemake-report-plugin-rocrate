@@ -2,11 +2,15 @@
 
 from datetime import datetime
 
+from snakemake_interface_report_plugins.interfaces import (
+    JobRecordInterface,
+)
+
 
 class ProvenanceGraphHelpers:
     """Helpers that create graph-level nodes and relationships."""
 
-    def _add_workflow_run_action(self, sorted_jobs) -> None:
+    def _add_workflow_run_action(self, sorted_jobs: list[JobRecordInterface]) -> None:
         """Create the workflow-level action spanning all executed jobs."""
         self.state.workflow_run_action_id = "local:action_workflow_run"
         earliest_start = min(item.starttime for item in sorted_jobs)
@@ -40,7 +44,7 @@ class ProvenanceGraphHelpers:
                 if output_ids & input_ids:
                     source.setdefault("precedes", []).append({"@id": target["@id"]})
 
-    def _get_time_str(self, timestamp) -> str:
+    def _get_time_str(self, timestamp: float) -> str:
         """Convert a Unix timestamp into a local datetime string."""
         try:
             return f"{datetime.fromtimestamp(timestamp)}"

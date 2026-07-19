@@ -9,6 +9,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
+from snakemake_interface_report_plugins.interfaces import (
+    DAGReportInterface,
+    JobRecordInterface,
+)
+
 from snakemake_report_plugin_rocrate.jsonld import (
     JsonLdNode,
     JsonLdNodeMap,
@@ -38,8 +43,8 @@ class ProvenanceBuilder(
 
     def __init__(
         self,
-        jobs,
-        dag,
+        jobs: list[JobRecordInterface],
+        dag: DAGReportInterface,
         external_directory_name: str = "_EXTERNAL",
     ):
         """Initialize the builder with Snakemake runtime objects.
@@ -123,7 +128,7 @@ class ProvenanceBuilder(
         if target_dir.exists():
             shutil.rmtree(target_dir)
 
-    def _create_action_node(self, job, file_nodes: JsonLdNodeMap) -> JsonLdNode:
+    def _create_action_node(self, job: JobRecordInterface, file_nodes: JsonLdNodeMap) -> JsonLdNode:
         """Create the action node for one executed Snakemake job.
 
         Args:
@@ -157,7 +162,7 @@ class ProvenanceBuilder(
         self._add_snakefile_supplemental_file()
         return node
 
-    def _create_method_node(self, job, optional_fields: JsonLdNode) -> str:
+    def _create_method_node(self, job: JobRecordInterface, optional_fields: JsonLdNode) -> str:
         """Create and register the method node backing one action.
 
         Args:

@@ -13,7 +13,9 @@ import spdx_license_list
 from rocrate.model import ContextEntity, Person
 from rocrate.rocrate import ROCrate
 from snakemake_interface_common.exceptions import WorkflowError
+from snakemake_interface_report_plugins.interfaces import DAGReportInterface
 
+from snakemake_report_plugin_rocrate import ReportSettings
 from snakemake_report_plugin_rocrate.jsonld import (
     JsonLdNodeMap,
     as_list,
@@ -34,8 +36,8 @@ class ProvenanceRunCrateBuilder:
 
     def __init__(
         self,
-        dag: any,
-        settings,
+        dag: DAGReportInterface,
+        settings: ReportSettings,
         ro_crate_version: str = "1.1",
         default_output_stem: str = "ro-crate",
     ):
@@ -135,14 +137,14 @@ class ProvenanceRunCrateBuilder:
         ):
             return
 
-        organization = None
+        organization: Any | tuple[Any, ...] = None
         if organization_ror or organization_name or organization_url:
             organization_properties = {"@type": "Organization"}
             if organization_name:
                 organization_properties["name"] = organization_name
             if organization_url:
                 organization_properties["url"] = organization_url
-            organization = self.crate.add(
+            organization = self.crate.add(  # pyright: ignore[reportUnknownVariableType]
                 ContextEntity(
                     self.crate,
                     organization_ror or "#organization",
@@ -158,7 +160,7 @@ class ProvenanceRunCrateBuilder:
 
         author = None
         if researcher_name or researcher_orcid:
-            author = self.crate.add(
+            author = self.crate.add(  # pyright: ignore[reportUnknownVariableType]
                 Person(
                     self.crate,
                     researcher_orcid or "#researcher",
@@ -616,7 +618,7 @@ class ProvenanceRunCrateBuilder:
             properties["object"] = input_parameters
         if output_parameters:
             properties["result"] = output_parameters
-        return self.crate.add(
+        return self.crate.add(  # type: ignore
             ContextEntity(
                 self.crate,
                 action_id,
@@ -671,7 +673,7 @@ class ProvenanceRunCrateBuilder:
         Returns:
             The workflow entity ID, or ``None`` when no Snakefile is available.
         """
-        snakefile = self.dag.workflow.main_snakefile
+        snakefile = self.dag.workflow.main_snakefile  # type: ignore
 
         if not snakefile:
             return None
