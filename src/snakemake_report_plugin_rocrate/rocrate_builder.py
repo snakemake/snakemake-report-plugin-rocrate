@@ -694,7 +694,12 @@ class ProvenanceRunCrateBuilder:
             lang="snakemake",
             main=True,
             fetch_remote=False,
-            properties={"hasPart": {"@id": fallback_tool_id}},
+            properties={
+                "hasPart": [
+                    {"@id": crate_safe_id(tool_node.get("@id"))}
+                    for tool_node in provenance.tools.values()
+                ]
+            },
             gen_cwl=False,
         )
         self.crate.mainEntity = {"@id": workflow.id}

@@ -17,5 +17,6 @@ __pycache__/
 # VSCode
 .vscode/*
 
-# examples
+# examples and example runs
 *workflow-run.zip
+*.snakemake.log
