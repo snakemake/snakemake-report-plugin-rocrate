@@ -7,7 +7,7 @@ instances into concrete RO-Crate ZIP archives.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import spdx_license_list
 from rocrate.model import ContextEntity, Person
@@ -15,7 +15,6 @@ from rocrate.rocrate import ROCrate
 from snakemake_interface_common.exceptions import WorkflowError
 from snakemake_interface_report_plugins.interfaces import DAGReportInterface
 
-from snakemake_report_plugin_rocrate import ReportSettings
 from snakemake_report_plugin_rocrate.jsonld import (
     JsonLdNodeMap,
     as_list,
@@ -24,6 +23,9 @@ from snakemake_report_plugin_rocrate.jsonld import (
 )
 from snakemake_report_plugin_rocrate.models import ProvenanceResult
 from snakemake_report_plugin_rocrate.utils import get_mime_type
+
+if TYPE_CHECKING:
+    from snakemake_report_plugin_rocrate import ReportSettings
 
 PROVENANCE_RUN_CRATE_PROFILE = "provenance-run-crate-0.5"
 WORKFLOW_RUN_CONTEXT = "https://w3id.org/ro/terms/workflow-run/context"
@@ -422,6 +424,7 @@ class ProvenanceRunCrateBuilder:
                 methods_by_id=methods_by_id,
                 tool_id_map=tool_id_map,
                 fallback_tool_id=fallback_tool_id,
+                workflow_id=workflow_id,
             )
             action_refs.append({"@id": action_id})
 
@@ -583,6 +586,7 @@ class ProvenanceRunCrateBuilder:
         methods_by_id: dict[str, dict[str, Any]],
         tool_id_map: dict[str, str],
         fallback_tool_id: str,
+        workflow_id: str,
     ) -> ContextEntity:
         """Add a ``CreateAction`` entity for an action node.
 
@@ -596,6 +600,7 @@ class ProvenanceRunCrateBuilder:
             methods_by_id: Method-node lookup keyed by provenance ``@id``.
             tool_id_map: Mapping from provenance tool IDs to crate tool IDs.
             fallback_tool_id: Crate ID of the fallback software entity.
+            workflow_id: Crate ID of the workflow entity.
 
         Returns:
             The contextual entity added to the crate.
@@ -608,6 +613,7 @@ class ProvenanceRunCrateBuilder:
                 methods_by_id=methods_by_id,
                 tool_id_map=tool_id_map,
                 fallback_tool_id=fallback_tool_id,
+                workflow_id=workflow_id,
             ),
         }
         if action_node.get("start time"):
@@ -632,6 +638,7 @@ class ProvenanceRunCrateBuilder:
         methods_by_id: dict[str, dict[str, Any]],
         tool_id_map: dict[str, str],
         fallback_tool_id: str,
+        workflow_id: str,
     ) -> dict[str, str]:
         """Resolve the software instruments associated with a workflow action.
 
@@ -640,13 +647,14 @@ class ProvenanceRunCrateBuilder:
             methods_by_id: Method-node lookup keyed by provenance ``@id``.
             tool_id_map: Mapping from provenance tool IDs to crate tool IDs.
             fallback_tool_id: Crate ID of the fallback software entity.
+            workflow_id: Crate ID of the workflow entity.
 
         Returns:
             A reference to the selected primary tool, or Snakemake when no
             environment tools were discovered.
         """
         if str(action_node.get("label", "")).casefold() == "workflow run":
-            return {"@id": fallback_tool_id}
+            return {"@id": workflow_id}
 
         method_id = reference_id(action_node.get("realizes method"))
         method_node = methods_by_id.get(method_id, {}) if method_id else {}

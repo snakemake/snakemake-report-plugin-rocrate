@@ -16,3 +16,6 @@ __pycache__/
 
 # VSCode
 .vscode/*
+
+# examples
+*workflow-run.zip
