@@ -511,11 +511,15 @@ class ProvenanceRunCrateBuilder:
         name = file_node.get("label", file_entity_id)
         action_slug = action_id.removeprefix("#")
         properties = {}
-        if workflow_id:
-            properties[direction] = {"@id": workflow_id}
+
+        if direction == "input":
+            self.crate.mainEntity.append_to("input", {"@id": file_entity_id})
+        elif direction == "output":
+            self.crate.mainEntity.append_to("output", {"@id": file_entity_id})
+
         return self.crate.add_formal_parameter(
             name=name,
-            additionalType=direction,
+            additionalType="File",
             identifier=f"#{action_slug}-{direction}-{index}",
             properties=properties,
         )
