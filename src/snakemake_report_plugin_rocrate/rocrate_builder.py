@@ -553,14 +553,15 @@ class ProvenanceRunCrateBuilder:
         tool_id = self.main_tool_id or fallback_tool_id
         for position, (rule_name, rule) in enumerate(self.rules.items(), start=1):
             step_id = f"#how-to-step-{rule_name}"
+            source = getattr(rule, "source", None)
             properties: dict[str, Any] = {
                 "@type": "HowToStep",
                 "name": rule.name or rule_name,
                 "position": position,
                 "workExample": {"@id": tool_id},
             }
-            if rule.source:
-                properties["text"] = rule.source
+            if source:
+                properties["text"] = source
             self.crate.add(
                 ContextEntity(
                     self.crate,
