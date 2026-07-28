@@ -1,5 +1,6 @@
 """File and supplemental-resource helpers for provenance building."""
 
+import logging
 import os
 import shlex
 import shutil
@@ -8,6 +9,8 @@ from pathlib import Path
 from snakemake_report_plugin_rocrate.jsonld import JsonLdNode, JsonLdNodeMap
 from snakemake_report_plugin_rocrate.models import CrateFile
 from snakemake_report_plugin_rocrate.utils import get_mime_type
+
+logger = logging.getLogger(__name__)
 
 
 class FileProvenanceHelpers:
@@ -165,6 +168,16 @@ class FileProvenanceHelpers:
         target_path = Path(self.external_directory_name) / relative_structure
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(original_path, target_path)
+
+        try:
+            shutil.copy2(original_path, target_path)
+        except PermissionError:
+            if target_path.exists():
+                logger.warning(
+                    "Cannot overwrite read-only file %s; keeping existing copy.",
+                    target_path,
+                )
+            else:
+                raise
 
         return str(target_path)
