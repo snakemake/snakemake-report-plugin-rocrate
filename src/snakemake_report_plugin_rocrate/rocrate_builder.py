@@ -551,17 +551,15 @@ class ProvenanceRunCrateBuilder:
         """Add one workflow description step for each Snakemake rule."""
         step_ids = []
         tool_id = self.main_tool_id or fallback_tool_id
-        for position, (rule_name, rule) in enumerate(self.rules.items(), start=1):
+        for _, (rule_name, rule) in enumerate(self.rules.items(), start=1):
             step_id = f"#how-to-step-{rule_name}"
             source = getattr(rule, "source", None)
             properties: dict[str, Any] = {
                 "@type": "HowToStep",
                 "name": rule.name or rule_name,
-                "position": position,
+                "description": source,
                 "workExample": {"@id": tool_id},
             }
-            if source:
-                properties["text"] = source
             self.crate.add(
                 ContextEntity(
                     self.crate,
@@ -614,7 +612,6 @@ class ProvenanceRunCrateBuilder:
                 action_id=action_id,
                 direction=direction,
                 index=index,
-                file_ref=file_ref,
                 file_ref_id=file_ref_id,
                 parameter_id=parameter_id,
                 file_id_map=file_id_map,
@@ -667,7 +664,6 @@ class ProvenanceRunCrateBuilder:
         action_id: str,
         direction: str,
         index: int,
-        file_ref: Any,
         file_ref_id: str,
         parameter_id: str,
         file_id_map: dict[str, str],
@@ -679,7 +675,6 @@ class ProvenanceRunCrateBuilder:
             action_id: Crate action identifier that owns the value.
             direction: Parameter direction such as ``input`` or ``output``.
             index: One-based position within the direction-specific value list.
-            file_ref: Original value reference from the provenance action node.
             file_ref_id: Provenance identifier of the referenced value.
             parameter_id: Crate identifier of the formal parameter.
             file_id_map: Mapping from provenance file IDs to crate file IDs.
