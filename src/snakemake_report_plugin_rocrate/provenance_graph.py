@@ -1,6 +1,6 @@
 """Graph-level provenance helpers."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 
 class ProvenanceGraphHelpers:
@@ -41,8 +41,8 @@ class ProvenanceGraphHelpers:
                     source.setdefault("precedes", []).append({"@id": target["@id"]})
 
     def _get_time_str(self, timestamp) -> str:
-        """Convert a Unix timestamp into a local datetime string."""
+        """Convert a Unix timestamp into an ISO 8601 UTC datetime string."""
         try:
-            return f"{datetime.fromtimestamp(timestamp)}"
+            return datetime.fromtimestamp(timestamp, tz=UTC).isoformat()
         except Exception:
             return ""

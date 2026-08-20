@@ -64,6 +64,15 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
             "required": False,
         },
     )
+    validation_severity: str = field(
+        default="REQUIRED",
+        metadata={
+            "help": "RO-Crate validation level to enforce.",
+            "choices": ["REQUIRED", "RECOMMENDED", "OPTIONAL"],
+            "env_var": False,
+            "required": False,
+        },
+    )
     researcher_orcid: str = field(
         default="",
         metadata={
@@ -76,6 +85,22 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
         default="",
         metadata={
             "help": "Full name of the person executing the workflow.",
+            "env_var": False,
+            "required": False,
+        },
+    )
+    agent_orcid: str = field(
+        default="",
+        metadata={
+            "help": "ORCID URL of the person responsible for the workflow run.",
+            "env_var": False,
+            "required": False,
+        },
+    )
+    agent_name: str = field(
+        default="",
+        metadata={
+            "help": "Full name of the person responsible for the workflow run.",
             "env_var": False,
             "required": False,
         },
@@ -116,7 +141,6 @@ class Reporter(ReporterBase):  # type: ignore[misc]
 
         if self.settings.filename:
             validate_filename(str(self.settings.filename))
-
         provenance_builder = ProvenanceBuilder(
             jobs=self.jobs,
             dag=self.dag,
@@ -128,6 +152,11 @@ class Reporter(ReporterBase):  # type: ignore[misc]
             crate_builder = ProvenanceRunCrateBuilder(
                 dag=self.dag,
                 settings=self.settings,
+                rules=self.rules,
             )
             crate_path = crate_builder.write(provenance)
-            validate_rocrate(crate_path, profile_identifier=PROVENANCE_RUN_CRATE_PROFILE)
+            validate_rocrate(
+                crate_path,
+                profile_identifier=PROVENANCE_RUN_CRATE_PROFILE,
+                requirement_severity=self.settings.validation_severity,
+            )

@@ -75,6 +75,19 @@ as their `instrument`, while all other discovered tools are attached through
 `softwareRequirements`. A single discovered tool is selected automatically;
 when multiple tools are found, this argument is required.
 
+### `validation-severity`
+
+Sets the minimum RO-Crate validation level enforced after the crate is
+generated. Accepted values are `REQUIRED`, `RECOMMENDED`, and `OPTIONAL`. The
+default is `REQUIRED`. Selecting `RECOMMENDED` also checks required rules, while
+`OPTIONAL` checks optional, recommended, and required rules.
+
+For example:
+
+```bash
+--report-rocrate-validation-severity RECOMMENDED
+```
+
 ### `researcher-orcid`
 
 Sets the ORCID URL or identifier of the person responsible for the workflow
@@ -84,6 +97,17 @@ run, for example `https://orcid.org/0000-0002-1825-0097`.
 
 Sets the full name of the person responsible for the workflow run. When an
 organization is supplied, the researcher is affiliated with that organization.
+
+### `agent-orcid`
+
+Sets the HTTP(S) ORCID URL of the person responsible for workflow orchestration.
+When supplied, `agent-name` must also be provided. The person is linked from the
+`OrganizeAction` through the `agent` predicate.
+
+### `agent-name`
+
+Sets the full name of the workflow orchestration agent. It must be supplied
+together with `agent-orcid`.
 
 ### `organization-ror`
 
@@ -117,6 +141,9 @@ snakemake \
   --report-rocrate-run-name "Linear elastic plate with a hole" \
   --report-rocrate-run-license "CC-BY-4.0" \
   --report-rocrate-main-tool "fenics-dolfinx" \
+  --report-rocrate-validation-severity "REQUIRED" \
+  --report-rocrate-agent-orcid "https://orcid.org/0009-0008-6162-8404" \
+  --report-rocrate-agent-name "Mahdi Jafarkhani" \
   --report-rocrate-organization-ror "https://ror.org/04vnq7t77" \
   --report-rocrate-organization-name "University of Stuttgart" \
   --report-rocrate-organization-url "https://www.uni-stuttgart.de/en/" \
@@ -141,6 +168,9 @@ snakemake paper.pdf \
   --report-rocrate-run-name "Poisson equation" \
   --report-rocrate-run-license "MIT" \
   --report-rocrate-main-tool "gmsh" \
+  --report-rocrate-validation-severity "REQUIRED" \
+  --report-rocrate-agent-orcid "https://orcid.org/0009-0008-6162-8404" \
+  --report-rocrate-agent-name "Mahdi Jafarkhani" \
   --report-rocrate-organization-ror "https://ror.org/04vnq7t77" \
   --report-rocrate-organization-name "University of Stuttgart" \
   --report-rocrate-organization-url "https://www.uni-stuttgart.de/en/" \
