@@ -20,7 +20,10 @@ dependencies = [
 
 [build-system]
 build-backend = "hatchling.build"
-requires = [ "hatchling",]
+# Keep generated metadata compatible with Twine/packaging in the dev environment.
+# Newer Hatchling releases may default to a newer Core Metadata version before
+# those consumers support it.
+requires = [ "hatchling==1.31.0",]
 
 [dependency-groups]
 dev = [ "mypy", "ruff", "coverage", "pytest", "pytest-cov", "twine", "build", "snakemake>=9.17.2,<10",]
