@@ -62,7 +62,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/a5/bf/c1775e49b350225bd851576ba75263bc728d8f05c0e31439a45f3429cc7b/requests_cache-1.3.3-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6d/97/a87901aef6b7e7e4a34c6dd6cc17dca8594a592ef9d9dd765fca2b7facf7/rich_click-1.9.8-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a8/ae/a4f1872bbde4a5c10ccb5c3d62400cf50ab6a9585edcc82fcff020596143/roc_validator-0.11.2-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/6a/52/c98d18e2df806f2d56202c58af565d80c35f42020e171a9e7c6101c5bed5/roc_validator-0.11.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/68/c7/3e8a7cdbed5cc7b1295196990f1bdea178ed7e6fc14ef40163e8b61ddca5/rocrate-0.15.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/28/90/a4a3652e832667917383f8d34112bdb37b78a6d14efc049e22a2c8192524/snakemake_interface_common-1.23.0-py3-none-any.whl
@@ -184,7 +184,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ff/9a/9afaade874b2fa6c752c36f1548f718b5b83af81ed9b76628329dab81c1b/rfc3986-2.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6d/97/a87901aef6b7e7e4a34c6dd6cc17dca8594a592ef9d9dd765fca2b7facf7/rich_click-1.9.8-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a8/ae/a4f1872bbde4a5c10ccb5c3d62400cf50ab6a9585edcc82fcff020596143/roc_validator-0.11.2-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/6a/52/c98d18e2df806f2d56202c58af565d80c35f42020e171a9e7c6101c5bed5/roc_validator-0.11.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/68/c7/3e8a7cdbed5cc7b1295196990f1bdea178ed7e6fc14ef40163e8b61ddca5/rocrate-0.15.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/9c/0d1fdc2e7aba23e290d603bc494e97bd205bae262ce33c6b32a69768ed5e/rpds_py-2026.6.3-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b2/97/f63084cf55444fc110e8cb985ebfcc592af47f597d44453d778cb81bc156/ruff-0.15.21-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -331,7 +331,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ff/9a/9afaade874b2fa6c752c36f1548f718b5b83af81ed9b76628329dab81c1b/rfc3986-2.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6d/97/a87901aef6b7e7e4a34c6dd6cc17dca8594a592ef9d9dd765fca2b7facf7/rich_click-1.9.8-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a8/ae/a4f1872bbde4a5c10ccb5c3d62400cf50ab6a9585edcc82fcff020596143/roc_validator-0.11.2-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/6a/52/c98d18e2df806f2d56202c58af565d80c35f42020e171a9e7c6101c5bed5/roc_validator-0.11.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/68/c7/3e8a7cdbed5cc7b1295196990f1bdea178ed7e6fc14ef40163e8b61ddca5/rocrate-0.15.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/5e/19/7e98f468bd50346faff5b10e5297374b443bfdddacc8e9fbc65984539597/rpds_py-2026.6.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b2/97/f63084cf55444fc110e8cb985ebfcc592af47f597d44453d778cb81bc156/ruff-0.15.21-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -477,7 +477,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ff/9a/9afaade874b2fa6c752c36f1548f718b5b83af81ed9b76628329dab81c1b/rfc3986-2.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6d/97/a87901aef6b7e7e4a34c6dd6cc17dca8594a592ef9d9dd765fca2b7facf7/rich_click-1.9.8-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a8/ae/a4f1872bbde4a5c10ccb5c3d62400cf50ab6a9585edcc82fcff020596143/roc_validator-0.11.2-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/6a/52/c98d18e2df806f2d56202c58af565d80c35f42020e171a9e7c6101c5bed5/roc_validator-0.11.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/68/c7/3e8a7cdbed5cc7b1295196990f1bdea178ed7e6fc14ef40163e8b61ddca5/rocrate-0.15.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/04/8f/d2f3f532616be4d06c316ef119683e832bd3d41e112bf3a88f4151c95b17/rpds_py-2026.6.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b2/97/f63084cf55444fc110e8cb985ebfcc592af47f597d44453d778cb81bc156/ruff-0.15.21-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -619,7 +619,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ff/9a/9afaade874b2fa6c752c36f1548f718b5b83af81ed9b76628329dab81c1b/rfc3986-2.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6d/97/a87901aef6b7e7e4a34c6dd6cc17dca8594a592ef9d9dd765fca2b7facf7/rich_click-1.9.8-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a8/ae/a4f1872bbde4a5c10ccb5c3d62400cf50ab6a9585edcc82fcff020596143/roc_validator-0.11.2-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/6a/52/c98d18e2df806f2d56202c58af565d80c35f42020e171a9e7c6101c5bed5/roc_validator-0.11.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/68/c7/3e8a7cdbed5cc7b1295196990f1bdea178ed7e6fc14ef40163e8b61ddca5/rocrate-0.15.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/57/d7/fe978efc2ae50abe48eb7464668ea99f53c010c60aeebb7b35ad27f23661/rpds_py-2026.6.3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b2/97/f63084cf55444fc110e8cb985ebfcc592af47f597d44453d778cb81bc156/ruff-0.15.21-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -761,7 +761,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/ff/9a/9afaade874b2fa6c752c36f1548f718b5b83af81ed9b76628329dab81c1b/rfc3986-2.0.0-py2.py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/6d/97/a87901aef6b7e7e4a34c6dd6cc17dca8594a592ef9d9dd765fca2b7facf7/rich_click-1.9.8-py3-none-any.whl
-      - pypi: https://files.pythonhosted.org/packages/a8/ae/a4f1872bbde4a5c10ccb5c3d62400cf50ab6a9585edcc82fcff020596143/roc_validator-0.11.2-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/6a/52/c98d18e2df806f2d56202c58af565d80c35f42020e171a9e7c6101c5bed5/roc_validator-0.11.4-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/68/c7/3e8a7cdbed5cc7b1295196990f1bdea178ed7e6fc14ef40163e8b61ddca5/rocrate-0.15.1-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/d1/9c/0d1fdc2e7aba23e290d603bc494e97bd205bae262ce33c6b32a69768ed5e/rpds_py-2026.6.3-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/b2/97/f63084cf55444fc110e8cb985ebfcc592af47f597d44453d778cb81bc156/ruff-0.15.21-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -2377,10 +2377,10 @@ packages:
   - rich-codex>=1.2.11 ; extra == 'docs'
   - typer>=0.15,<0.26 ; extra == 'docs'
   requires_python: '>=3.8'
-- pypi: https://files.pythonhosted.org/packages/a8/ae/a4f1872bbde4a5c10ccb5c3d62400cf50ab6a9585edcc82fcff020596143/roc_validator-0.11.2-py3-none-any.whl
+- pypi: https://files.pythonhosted.org/packages/6a/52/c98d18e2df806f2d56202c58af565d80c35f42020e171a9e7c6101c5bed5/roc_validator-0.11.4-py3-none-any.whl
   name: roc-validator
-  version: 0.11.2
-  sha256: 34a1e43a6c020e491ef4c26da7ae2579cff8c89052bf5a7a90baac205ab7fb1c
+  version: 0.11.4
+  sha256: f10bb9f7688719c31748ea459640c27fc71eb7f6d633959a07b148b5f9b015d8
   requires_dist:
   - click>=8.2,<9.0
   - colorlog>=6.9,<7.0
@@ -2593,7 +2593,7 @@ packages:
   - snakemake-interface-report-plugins>=1.1.0,<2.0.0
   - rocrate>=0.15.0,<2.0.0
   - spdx-license-list>=3.28.0,<4.0.0
-  - roc-validator
+  - roc-validator==0.11.4
   - markdown-it-py>=2.2,<3.0.0
   requires_python: '>=3.11,<4.0'
 - pypi: https://files.pythonhosted.org/packages/b7/eb/765df945f75e1f3533aff9ca76def751d0d505da0d2c7865fb3e6daad5e1/spdx_license_list-3.28.0-py3-none-any.whl

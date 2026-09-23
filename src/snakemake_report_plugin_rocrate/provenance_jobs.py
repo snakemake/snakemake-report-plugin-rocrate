@@ -46,14 +46,14 @@ class JobMetadataHelpers:
             if conda_file in self.state.conda_tools_cache:
                 tools = self.state.conda_tools_cache[conda_file]
                 continue
-            tools = self._add_tools(conda_file.content)
+            tools = self._add_tools(conda_file.content, getattr(conda_file, "address", None))
             self.state.conda_tools_cache[conda_file] = tools
         return tools
 
-    def _add_tools(self, env_file_content: str) -> list[JsonLdNode]:
+    def _add_tools(self, env_file_content: str, env_path: str | None = None) -> list[JsonLdNode]:
         """Register tool nodes derived from a conda environment file."""
         tools_list = []
-        tools = self.tool_resolver.extract_tools_from_yaml(env_file_content)
+        tools = self.tool_resolver.extract_tools_from_yaml(env_file_content, env_path=env_path)
         if tools:
             for name, version in tools.items():
                 if name not in self.state.tools:
@@ -61,6 +61,7 @@ class JobMetadataHelpers:
                         "@id": f"local:tool_{self.state.tool_counter}",
                         "@type": "schema:SoftwareApplication",
                         "label": name,
+                        "url": self.tool_resolver.package_urls.get(name),
                         **({"softwareVersion": version} if version else {}),
                     }
                     self.state.tools[name] = item

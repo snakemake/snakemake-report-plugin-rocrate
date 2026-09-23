@@ -14,13 +14,16 @@ dependencies = [
     "snakemake-interface-report-plugins (>=1.1.0,<2.0.0)",
     "rocrate (>=0.15.0, <2.0.0)",
     "spdx-license-list (>=3.28.0, <4.0.0)",
-    "roc-validator",
+    "roc-validator==0.11.4",
     "markdown-it-py (>=2.2,<3.0.0)"
 ]
 
 [build-system]
 build-backend = "hatchling.build"
-requires = [ "hatchling",]
+# Keep generated metadata compatible with Twine/packaging in the dev environment.
+# Newer Hatchling releases may default to a newer Core Metadata version before
+# those consumers support it.
+requires = [ "hatchling==1.31.0",]
 
 [dependency-groups]
 dev = [ "mypy", "ruff", "coverage", "pytest", "pytest-cov", "twine", "build", "snakemake>=9.17.2,<10",]
