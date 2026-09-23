@@ -36,9 +36,7 @@ def validate_rocrate(
         for profile in result.context.profiles
         for requirement in profile.get_requirements(requirement_severity)
         for check in requirement.get_checks()
-        if check.severity >= requirement_severity
-        and not check.overridden
-        and not check.deactivated
+        if check.severity >= requirement_severity and not check.overridden and not check.deactivated
     }
     incomplete = expected - result.executed_checks - result.skipped_checks
     if incomplete:
@@ -51,6 +49,4 @@ def validate_rocrate(
             for issue in result.get_issues()
         )
         raise WorkflowError(message)
-    snakemake_logger.info(
-        "RO-Crate validation succeeded for profile provenance-run-crate-0.5."
-    )
+    snakemake_logger.info("RO-Crate validation succeeded for profile provenance-run-crate-0.5.")
