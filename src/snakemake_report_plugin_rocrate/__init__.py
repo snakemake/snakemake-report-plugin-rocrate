@@ -9,7 +9,6 @@ from snakemake_report_plugin_rocrate.provenance import ProvenanceBuilder
 from snakemake_report_plugin_rocrate.rocrate_builder import (
     DEFAULT_PROVENANCE_RUN_CRATE_DESCRIPTION,
     DEFAULT_PROVENANCE_RUN_CRATE_NAME,
-    PROVENANCE_RUN_CRATE_PROFILE,
     ProvenanceRunCrateBuilder,
 )
 from snakemake_report_plugin_rocrate.utils import validate_filename
@@ -60,6 +59,14 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
                 "Name of the primary software tool. Other discovered tools are "
                 "recorded as its softwareRequirements."
             ),
+            "env_var": False,
+            "required": False,
+        },
+    )
+    workflow_inputs: str = field(
+        default="{}",
+        metadata={
+            "help": "JSON object mapping workflow input slot names to external input file paths.",
             "env_var": False,
             "required": False,
         },
@@ -157,6 +164,5 @@ class Reporter(ReporterBase):  # type: ignore[misc]
             crate_path = crate_builder.write(provenance)
             validate_rocrate(
                 crate_path,
-                profile_identifier=PROVENANCE_RUN_CRATE_PROFILE,
                 requirement_severity=self.settings.validation_severity,
             )

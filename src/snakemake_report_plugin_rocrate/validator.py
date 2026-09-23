@@ -1,8 +1,4 @@
-"""Validation helpers for generated RO-Crates.
-
-This module centralizes interaction with ``rocrate_validator`` so the rest of
-the package can treat validation as a single, well-defined step.
-"""
+"""Validation helpers for generated Provenance Run RO-Crates."""
 
 from __future__ import annotations
 
@@ -15,27 +11,9 @@ from snakemake_interface_common.exceptions import WorkflowError
 
 def validate_rocrate(
     rocrate_uri: str | Path,
-    profile_identifier: str = "ro-crate-1.1",
     requirement_severity: models.Severity | str = models.Severity.REQUIRED,
 ) -> None:
-    """Validate a crate path against a selected RO-Crate profile.
-
-    Args:
-        rocrate_uri: Path to the generated RO-Crate ZIP file or extracted
-            directory to validate.
-        profile_identifier: Profile token understood by ``rocrate_validator``,
-            such as ``ro-crate-1.1`` or ``provenance-run-crate-0.5``.
-        requirement_severity: Minimum validation level to enforce. Accepted
-            values are ``REQUIRED``, ``RECOMMENDED``, and ``OPTIONAL``.
-
-    Returns:
-        None. Successful validation is indicated by the absence of an
-        exception.
-
-    Raises:
-        WorkflowError: If the severity is invalid or the validator reports an
-            issue at the selected level.
-    """
+    """Validate a crate against Provenance Run Crate 0.5."""
     if isinstance(requirement_severity, str):
         try:
             requirement_severity = models.Severity[requirement_severity.strip().upper()]
@@ -48,12 +26,24 @@ def validate_rocrate(
 
     settings = services.ValidationSettings(
         rocrate_uri=Path(rocrate_uri),
-        profile_identifier=profile_identifier,
+        profile_identifier="provenance-run-crate-0.5",
         requirement_severity=requirement_severity,
     )
-
     result = services.validate(settings)
 
+    expected = {
+        check
+        for profile in result.context.profiles
+        for requirement in profile.get_requirements(requirement_severity)
+        for check in requirement.get_checks()
+        if check.severity >= requirement_severity
+        and not check.overridden
+        and not check.deactivated
+    }
+    incomplete = expected - result.executed_checks - result.skipped_checks
+    if incomplete:
+        identifiers = sorted(check.identifier for check in incomplete)
+        raise WorkflowError(f"RO-Crate validation checks did not complete: {identifiers}")
     if result.has_issues():
         message = "RO-Crate is invalid!\n" + "\n".join(
             f"Detected issue of severity {issue.severity.name} with check "
@@ -61,5 +51,6 @@ def validate_rocrate(
             for issue in result.get_issues()
         )
         raise WorkflowError(message)
-
-    snakemake_logger.info("RO-Crate validation succeeded for profile %s.", profile_identifier)
+    snakemake_logger.info(
+        "RO-Crate validation succeeded for profile provenance-run-crate-0.5."
+    )

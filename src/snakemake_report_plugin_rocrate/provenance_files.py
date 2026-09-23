@@ -33,14 +33,29 @@ class FileProvenanceHelpers:
         file_nodes: JsonLdNodeMap,
     ) -> None:
         """Attach input and output file references to a processing action."""
-        for file_path, source in [(f, "input") for f in self._job_input_files(job)] + [
-            (f, "output") for f in job.output
-        ]:
-            if not self._is_file(file_path):
-                continue
-            file_node = self._add_file(file_path, file_nodes)
-            node_key = "has input" if source == "input" else "has output"
-            node[node_key].append({"@id": file_node["@id"]})
+        dag_job = next((item for item in self.dag.jobs if item.jobid == job.job.jobid), None)
+        for direction in ("input", "output"):
+            values = (
+                getattr(dag_job, direction)
+                if dag_job is not None
+                else (self._job_input_files(job) if direction == "input" else job.output)
+            )
+            named_slots = {}
+            for name, (start, end) in getattr(values, "_get_names", lambda: [])():
+                for index in range(start, end if end is not None else start + 1):
+                    named_slots[index] = name
+            for index, file_path in enumerate(values):
+                if not self._is_file(file_path):
+                    continue
+                file_node = self._add_file(file_path, file_nodes)
+                node[f"has {direction}"].append(
+                    {
+                        "@id": file_node["@id"],
+                        "parameter rule": str(job.rule),
+                        "parameter slot": named_slots.get(index, str(index + 1)),
+                        "parameter named": index in named_slots,
+                    }
+                )
 
     def _add_snakefile_supplemental_file(self) -> None:
         """Register the workflow Snakefile as a supplemental file when found."""
@@ -62,6 +77,7 @@ class FileProvenanceHelpers:
                 "@id": f"local:file_{len(file_dict)}",
                 "@type": "cr:FileObject",
                 "label": resolved_path,
+                "source path": str(Path(file_path).resolve()),
             }
         return file_dict[resolved_path]
 
@@ -155,8 +171,7 @@ class FileProvenanceHelpers:
         current_dir = Path.cwd().resolve()
 
         try:
-            _ = original_path.relative_to(current_dir)
-            return str(path_str)
+            return str(original_path.relative_to(current_dir))
         except ValueError:
             pass
 

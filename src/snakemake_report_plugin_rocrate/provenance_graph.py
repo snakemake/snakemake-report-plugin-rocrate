@@ -43,6 +43,6 @@ class ProvenanceGraphHelpers:
     def _get_time_str(self, timestamp) -> str:
         """Convert a Unix timestamp into an ISO 8601 UTC datetime string."""
         try:
-            return datetime.fromtimestamp(timestamp, tz=UTC).isoformat()
+            return datetime.fromtimestamp(timestamp, tz=UTC).isoformat(timespec="milliseconds")
         except Exception:
             return ""
