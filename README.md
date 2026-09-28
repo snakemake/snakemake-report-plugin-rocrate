@@ -1,19 +1,11 @@
 # snakemake-report-plugin-rocrate
 
-> ⚠️ **This plugin is currently under active development and not yet ready for production use.**
+Snakemake report plugin to automatically create a [Provenance Run Crate](https://w3id.org/ro/wfrun/provenance/0.5) after a workflow run, capturing metadata about the workflow execution. Provenance Run Crate is the most detailed profile in the [Workflow Run RO-Crate (WRROC)](https://www.researchobject.org/workflow-run-crate/) profile collection, recording provenance at the level of individual tool executions.
 
-Snakemake report plugin to automatically create a [Provenance Run Crate](https://www.researchobject.org/workflow-run-crate/profiles/provenance_run_crate/) after a workflow run, capturing all metadata about the workflow execution. Provenance Run Crate is the most detailed profile in the [Workflow Run RO-Crate (WRROC)](https://www.researchobject.org/workflow-run-crate/) profile collection, recording provenance at the level of individual tool executions.
-
-## About
+## About RO-Crate and WRROC
 
 RO-Crate is a community effort to establish a lightweight approach to packaging research data with their metadata.
-The Workflow Run RO-Crate community is part of the [RO-Crate community](https://www.researchobject.org/ro-crate/community) and develops extensions to capture provenance of computational workflows. 
-
-
-- [RO-Crate](https://www.researchobject.org/ro-crate/)
-- [Provenance Run Crate profile](https://www.researchobject.org/workflow-run-crate/profiles/provenance_run_crate/)
-- [Workflow Run RO-Crate profile family](https://www.researchobject.org/workflow-run-crate/profiles/provenance_run_crate/)
-- [Workflow Run Crate working group](https://www.researchobject.org/workflow-run-crate/)
+The Workflow Run RO-Crate community is part of the [RO-Crate community](https://www.researchobject.org/ro-crate/community) and develops [profiles](https://www.researchobject.org/ro-crate/profiles) to capture the provenance of computational workflow executions.
 
 ## Status
 
@@ -41,7 +33,8 @@ python -m pip install --editable .
 
 The reporter collects execution metadata from Snakemake jobs and writes a
 Provenance Run Crate 0.5 ZIP using RO-Crate 1.1 and Workflow RO-Crate 1.0. The
-reporter validates the finished archive at the selected severity.
+reporter [validates](https://github.com/crs4/rocrate-validator) the finished
+archive at the selected severity.
 
 ## Reporter arguments
 
@@ -97,7 +90,7 @@ rejected. Several slot names may map to the same value.
 
 ### `validation-severity`
 
-Sets the minimum official `roc-validator` validation level. Accepted values
+Sets the minimum `roc-validator` validation level. Accepted values
 are `REQUIRED`, `RECOMMENDED`, and `OPTIONAL`; the default is `REQUIRED`.
 
 ### `researcher-orcid`
