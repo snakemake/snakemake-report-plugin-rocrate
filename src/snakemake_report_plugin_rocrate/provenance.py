@@ -139,6 +139,8 @@ class ProvenanceBuilder(
             "@id": f"local:action_{job.job.jobid}",
             "@type": "action",
             "label": f"{job.rule}_{job.job.jobid}",
+            "rule": str(job.rule),
+            "description": "\n".join(self._job_shell_commands(job)) or f"Execute rule {job.rule}",
             "start time": self._get_time_str(job.starttime),
             "end time": self._get_time_str(job.endtime),
             "has input": [],
@@ -154,6 +156,12 @@ class ProvenanceBuilder(
             file_nodes=file_nodes,
         )
         node["realizes method"] = {"@id": self._create_method_node(job, optional_fields)}
+        for environment in self._job_conda_files(job):
+            source = getattr(environment, "file", None)
+            if source and Path(str(source)).is_file():
+                environment_path = self._copy_external_relative_files(str(source))
+                self._add_supplemental_file(environment_path, environment_path, "application/yaml")
+                node["environment file"] = environment_path
         self._add_snakefile_supplemental_file()
         return node
 

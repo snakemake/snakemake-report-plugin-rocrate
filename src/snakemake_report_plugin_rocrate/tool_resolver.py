@@ -2,7 +2,7 @@
 
 import json
 import re
-import subprocess
+from pathlib import Path
 
 import yaml
 
@@ -11,8 +11,8 @@ class ToolResolver:
     """Resolve software tool metadata from conda environment definitions.
 
     Tool versions can be declared directly in a workflow's environment YAML,
-    but sometimes only package names are present. This helper inspects local
-    conda environments to fill in missing versions when possible.
+    but sometimes only package names are present. This helper reads the job's
+    own conda-meta records to capture installed versions when available.
     """
 
     def __init__(self) -> None:
@@ -21,10 +21,11 @@ class ToolResolver:
         Returns:
             None.
         """
-        self._envs: dict[str, str] | None = None
-        self._packages_by_env: dict[str, dict[str, str]] = {}
+        self.package_urls: dict[str, str] = {}
 
-    def extract_tools_from_yaml(self, env_file_content: str) -> dict[str, str | None]:
+    def extract_tools_from_yaml(
+        self, env_file_content: str, env_path: str | None = None
+    ) -> dict[str, str | None]:
         """Extract tool names and versions from a conda environment file.
 
         Args:
@@ -33,23 +34,35 @@ class ToolResolver:
         Returns:
             dict[str, str | None]: Mapping from normalized package name to
             discovered version. Versions remain ``None`` when neither the YAML
-            file nor the inspected local environments provide one.
+            file nor the job environment provides one.
         """
         results: dict[str, str | None] = {}
         found_targets = set()
         parsed = yaml.safe_load(env_file_content) or {}
         dependencies = parsed.get("dependencies", [])
+        self.package_urls = {}
+        channels = parsed.get("channels", [])
+        default_channel = channels[0] if channels else "anaconda"
 
         version_pattern = re.compile(r"([a-zA-Z0-9_.\-]+)([=><!~]+.*)?")
 
         for dep in dependencies:
             if isinstance(dep, str):
-                match = version_pattern.match(dep.strip())
+                channel, _, specification = dep.strip().rpartition("::")
+                match = version_pattern.fullmatch(specification)
+
                 if not match:
                     continue
                 pkg_name = match.group(1).lower()
                 version = match.group(2).lstrip("=") if match.group(2) else None
-                results[pkg_name] = version
+                results[pkg_name] = (
+                    version if version and not any(c in version for c in "<>!*~,") else None
+                )
+                registry = channel or default_channel
+                if registry == "defaults":
+                    registry = "anaconda"
+                if re.fullmatch(r"[a-zA-Z0-9_-]+", str(registry)):
+                    self.package_urls[pkg_name] = f"https://anaconda.org/{registry}/{pkg_name}"
                 found_targets.add(pkg_name)
             elif isinstance(dep, dict):
                 for _, pkgs in dep.items():
@@ -59,77 +72,21 @@ class ToolResolver:
                             continue
                         pkg_name = match.group(1).lower()
                         version = match.group(2).lstrip("=") if match.group(2) else None
-                        results[pkg_name] = version
+                        results[pkg_name] = (
+                            version if version and not any(c in version for c in "<>!*~,") else None
+                        )
+                        self.package_urls[pkg_name] = f"https://pypi.org/project/{pkg_name}/"
                         found_targets.add(pkg_name)
 
-        selected_env_pkgs = None
-        try:
-            envs = self._list_conda_envs()
-        except (OSError, subprocess.CalledProcessError, json.JSONDecodeError):
-            envs = {}
-        for _, env_path in envs.items():
-            try:
-                pkgs = self._get_packages(env_path, found_targets)
-            except (OSError, subprocess.CalledProcessError, json.JSONDecodeError):
-                continue
-            if all(pkg in pkgs for pkg in found_targets):
-                selected_env_pkgs = pkgs
-                break
-
-        if selected_env_pkgs:
-            for pkg in found_targets:
-                if results.get(pkg) is None and pkg in selected_env_pkgs:
-                    results[pkg] = selected_env_pkgs[pkg]
+        # Use only the environment attached to this job. A similarly populated
+        # unrelated environment does not establish what executed the workflow.
+        if env_path:
+            for record in (Path(env_path) / "conda-meta").glob("*.json"):
+                metadata = json.loads(record.read_text())
+                name = metadata.get("name", "").lower()
+                if name in found_targets and metadata.get("version"):
+                    results[name] = metadata["version"]
+                    if metadata.get("url"):
+                        self.package_urls[name] = metadata["url"]
 
         return results
-
-    def _list_conda_envs(self) -> dict[str, str]:
-        """List locally available conda environments.
-
-        Returns:
-            dict[str, str]: Mapping from environment name to environment path.
-
-        Raises:
-            subprocess.CalledProcessError: If ``conda env list --json`` fails.
-            json.JSONDecodeError: If the command output is not valid JSON.
-        """
-        if self._envs is None:
-            result = subprocess.run(
-                ["conda", "env", "list", "--json"],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            envs_info = json.loads(result.stdout)
-            self._envs = {path.split("/")[-1]: path for path in envs_info["envs"]}
-        return self._envs
-
-    def _get_packages(self, env_path: str, targets: set[str]) -> dict[str, str]:
-        """Return package versions for selected packages in one environment.
-
-        Args:
-            env_path: Filesystem path to the conda environment to inspect.
-            targets: Lower-cased package names to keep in the returned mapping.
-
-        Returns:
-            dict[str, str]: Mapping from package name to installed version for
-            the subset present in ``targets``.
-
-        Raises:
-            subprocess.CalledProcessError: If ``conda list --json`` fails.
-            json.JSONDecodeError: If the command output is not valid JSON.
-        """
-        if env_path not in self._packages_by_env:
-            result = subprocess.run(
-                ["conda", "list", "--prefix", env_path, "--json"],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            all_packages = json.loads(result.stdout)
-            self._packages_by_env[env_path] = {pkg["name"]: pkg["version"] for pkg in all_packages}
-        return {
-            pkg_name: version
-            for pkg_name, version in self._packages_by_env[env_path].items()
-            if pkg_name.lower() in targets
-        }
