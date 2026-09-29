@@ -43,6 +43,14 @@ All checks run through `pixi run -e dev <task>`:
 | `check` | `format-check` → `lint` → `typecheck` → `test`, in order |
 | `ci` | Mimics the full GitHub Actions pipeline locally (see below) |
 
+You can also load the pixi environment (e.g. to run the example workflows) with:
+
+```bash
+pixi shell -e dev
+```
+
+To leave the environment, type `exit` or press `Ctrl + D`.
+
 ### Before you push
 
 Please run
