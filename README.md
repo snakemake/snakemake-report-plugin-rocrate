@@ -189,11 +189,6 @@ The reporter writes `poisson-equation-workflow-run.zip` in the example
 directory. See the [example README](examples/poisson-equation/snakemake/README.md)
 for more information about the workflow and its configuration.
 
-
-For usage instructions, see the documentation:
-
-- [Further information](docs/further.md)
-
 ## Profile validation
 
 Profile 0.5 is validated directly with the rules distributed by
@@ -221,3 +216,7 @@ sidecar files. Workflows that produce multi-file datasets should declare every
 required component as a Snakemake output so it is captured by the report.
 
 Local Conda YAML files are included in the crate when Snakemake reports them.
+
+## Contributing to this repository
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md).
