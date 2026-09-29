@@ -4,7 +4,8 @@ Snakemake report plugin to automatically create a [Provenance Run Crate](https:/
 
 ## About RO-Crate and WRROC
 
-RO-Crate is a community effort to establish a lightweight approach to packaging research data with their metadata.
+[RO-Crate](https://www.researchobject.org/ro-crate/) is a community effort to establish a lightweight approach for packaging research data with their metadata in a machine-readable format.
+It helps make research output findable, accessible, interoperable, and reusable (FAIR).
 The Workflow Run RO-Crate community is part of the [RO-Crate community](https://www.researchobject.org/ro-crate/community) and develops [profiles](https://www.researchobject.org/ro-crate/profiles) to capture the provenance of computational workflow executions.
 
 ## Status
@@ -191,7 +192,6 @@ for more information about the workflow and its configuration.
 
 For usage instructions, see the documentation:
 
-- [Introduction](docs/intro.md)
 - [Further information](docs/further.md)
 
 ## Profile validation
