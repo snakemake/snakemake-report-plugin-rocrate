@@ -143,21 +143,28 @@ cd examples/linear-elastic-plate-with-hole/fenics-dolfinx
 snakemake \
   --software-deployment-method conda \
   --reporter rocrate \
-  --report-rocrate-filename "workflow-run" \
-  --report-rocrate-run-name "Linear elastic plate with a hole" \
-  --report-rocrate-run-license "CC-BY-4.0" \
-  --report-rocrate-main-tool "fenics-dolfinx" \
-  --report-rocrate-workflow-inputs '{"experiment": "experiment.json", "parameters": "parameters_1.json"}' \
-  --report-rocrate-validation-severity "REQUIRED" \
-  --report-rocrate-agent-orcid "https://orcid.org/0009-0008-6162-8404" \
-  --report-rocrate-agent-name "Mahdi Jafarkhani" \
-  --report-rocrate-organization-ror "https://ror.org/04vnq7t77" \
-  --report-rocrate-organization-name "University of Stuttgart" \
-  --report-rocrate-organization-url "https://www.uni-stuttgart.de/en/" \
+  --profile profiles/rocrate \
   --cores 1
 ```
 
 The reporter writes `workflow-run.zip` in the example directory.
+
+Note that the above command leverages Snakemake profiles to offload
+plugin-specific parameter settings to `profiles/rocrate/config.yaml`:
+
+```yaml
+report-rocrate-filename: "workflow-run"
+report-rocrate-run-name: "Linear elastic plate with a hole"
+report-rocrate-run-license: "CC-BY-4.0"
+report-rocrate-main-tool: "fenics-dolfinx"
+report-rocrate-workflow-inputs: '{"experiment": "experiment.json", "parameters": "parameters_1.json"}'
+report-rocrate-validation-severity: "REQUIRED"
+report-rocrate-agent-orcid: "https://orcid.org/0009-0008-6162-8404"
+report-rocrate-agent-name: "Mahdi Jafarkhani"
+report-rocrate-organization-ror: "https://ror.org/04vnq7t77"
+report-rocrate-organization-name: "University of Stuttgart"
+report-rocrate-organization-url: "https://www.uni-stuttgart.de/en/"
+```
 
 ### Poisson equation
 
@@ -171,16 +178,7 @@ cd examples/poisson-equation/snakemake
 snakemake paper.pdf \
   --software-deployment-method conda \
   --reporter rocrate \
-  --report-rocrate-filename "poisson-equation-workflow-run" \
-  --report-rocrate-run-name "Poisson equation" \
-  --report-rocrate-run-license "MIT" \
-  --report-rocrate-main-tool "gmsh" \
-  --report-rocrate-validation-severity "REQUIRED" \
-  --report-rocrate-agent-orcid "https://orcid.org/0009-0008-6162-8404" \
-  --report-rocrate-agent-name "Mahdi Jafarkhani" \
-  --report-rocrate-organization-ror "https://ror.org/04vnq7t77" \
-  --report-rocrate-organization-name "University of Stuttgart" \
-  --report-rocrate-organization-url "https://www.uni-stuttgart.de/en/" \
+  --profile profiles/rocrate \
   --cores 1 \
   --use-conda
 ```
