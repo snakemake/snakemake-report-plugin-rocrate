@@ -6,7 +6,7 @@ authors = [
     { name = "Mahdi Jafarkhani", email = "mahdi.jafarkhani@tik.uni-stuttgart.de" },
     { name = "Simone Leo" }
 ]
-description = "Snakemake Report Plugin to automatically create Workflow Run RO-Crates"
+description = "Snakemake report plugin that creates Provenance Run RO-Crates of workflow runs"
 readme = "README.md"
 requires-python = ">=3.11,<4.0"
 license = "MIT"
