@@ -64,35 +64,35 @@ Sets the license applying to the crate. It accepts an SPDX identifier such as
 
 ### `main-tool`
 
-Selects the primary `SoftwareApplication` by matching the supplied value with
-a discovered tool name. The match is case-insensitive. Actions use this tool
-as their `instrument`, while all other discovered tools are attached through
-`softwareRequirements`. A single discovered tool is selected automatically;
-when multiple tools are found, this argument is required.
+Selects a preferred package by name and lists it first among a rule tool's
+`softwareRequirements` when that package is present in the job environment.
+The match is case-insensitive. Each executed rule has its own tool entity as the
+`CreateAction.instrument`; packages from that job's environment are attached to
+the rule tool through `softwareRequirements`. The rule tool links to its packaged
+Conda environment YAML through `subjectOf` when one is available. This option
+is optional. When omitted, discovered packages from each job environment are
+listed directly as that job's `CreateAction.instrument` and as tools in the
+workflow's `hasPart`. If no package metadata is available, the rule tool remains
+the instrument.
 
-### `workflow-inputs`
+### Workflow inputs
 
-Declares the workflow input interface as a JSON object mapping slot names to
-external input file paths, relative to the workflow working directory:
-
-```bash
---report-rocrate-workflow-inputs '{"experiment": "experiment.json", "parameters": "parameters_1.json"}'
-```
-
-By default this is `{}`. External files are always recorded on the workflow
-run's `object`, but are not automatically declared as workflow parameter slots.
-This avoids treating every hardcoded configuration file as a public workflow
-input. Rule inputs and outputs still have their own parameters; unnamed rule
-slots use positional names. Intermediate files are excluded from the workflow
+The reporter finds external inputs from the executed jobs: files
+consumed by a job and not produced by another job. It uses Snakemake's named
+input slot when available, or the file name otherwise. Repeated names receive
+numeric suffixes. These files are recorded on the workflow run's `object` and
+as workflow input parameters. Intermediate files are excluded from the workflow
 boundary. Final outputs retain workflow output parameters.
-
-Only external input files can be mapped; invalid or intermediate paths are
-rejected. Several slot names may map to the same value.
 
 ### `validation-severity`
 
-Sets the minimum `roc-validator` validation level. Accepted values
-are `REQUIRED`, `RECOMMENDED`, and `OPTIONAL`; the default is `REQUIRED`.
+Sets the lowest `roc-validator` level to inspect. Accepted values are
+`REQUIRED`, `RECOMMENDED`, and `OPTIONAL`; the default is `REQUIRED`.
+Missing REQUIRED checks make the report fail at every level. Missing
+RECOMMENDED or OPTIONAL checks are logged as advisory findings while the
+crate is reported as satisfying the required checks. Checks that could not
+be evaluated are reported separately; an unevaluated REQUIRED check still
+makes the report fail.
 
 ### `researcher-orcid`
 
@@ -157,7 +157,6 @@ report-rocrate-filename: "workflow-run"
 report-rocrate-run-name: "Linear elastic plate with a hole"
 report-rocrate-run-license: "CC-BY-4.0"
 report-rocrate-main-tool: "fenics-dolfinx"
-report-rocrate-workflow-inputs: '{"experiment": "experiment.json", "parameters": "parameters_1.json"}'
 report-rocrate-validation-severity: "REQUIRED"
 report-rocrate-agent-orcid: "https://orcid.org/0009-0008-6162-8404"
 report-rocrate-agent-name: "Mahdi Jafarkhani"
@@ -198,12 +197,18 @@ Sources:
 - [Workflow RO-Crate 1.0](https://w3id.org/workflowhub/workflow-ro-crate/1.0)
 
 The reporter does not invent metadata that Snakemake does not supply, such as
-workflow authorship or a released workflow version. Software versions
-come from the job's own Conda environment when available, otherwise exact YAML
-pins; missing versions are explicitly recorded as `not recorded`. Package
-registry URLs are derived from environment declarations, with a package-search
-URL used when the registry is unknown. Report-generation Snakemake versions
-are recorded for the engine/language; historical executions may have used a
+workflow authorship or a released workflow version. For jobs with a materialized
+Conda environment, it reads installed package names and versions from that job's
+`conda-meta/*.json` records. This includes packages whose versions were not pinned
+in the environment YAML, such as Python, and transitive dependencies. Each version
+of a package gets a separate tool entity when jobs used different environments.
+If the Conda prefix is unavailable, the reporter makes no installed-package claim.
+Run the report with `--software-deployment-method conda` so Snakemake resolves the
+job environments. Package URLs come from Conda's installed-package records when
+present, with a package-search URL used when no URL is recorded. Packages
+installed only through pip are not listed in Conda's `conda-meta` records.
+Report-generation Snakemake versions are recorded for the engine/language;
+historical executions may have used a
 different version not retained in Snakemake's run metadata.
 
 ## Files and environment definitions

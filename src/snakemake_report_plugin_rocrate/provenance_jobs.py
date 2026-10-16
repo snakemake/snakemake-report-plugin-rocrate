@@ -40,33 +40,35 @@ class JobMetadataHelpers:
     def _job_tools(self, job) -> list[JsonLdNode]:
         """Resolve software-tool nodes associated with a job."""
         tools: list[JsonLdNode] = []
-        for conda_file in self._job_conda_files(job):
-            if not conda_file:
+        for environment in self._job_conda_files(job):
+            if not environment:
                 continue
-            if conda_file in self.state.conda_tools_cache:
-                tools = self.state.conda_tools_cache[conda_file]
+            if environment in self.state.conda_tools_cache:
+                tools = self.state.conda_tools_cache[environment]
                 continue
-            tools = self._add_tools(conda_file.content, getattr(conda_file, "address", None))
-            self.state.conda_tools_cache[conda_file] = tools
+            tools = self._add_tools(environment)
+            self.state.conda_tools_cache[environment] = tools
         return tools
 
-    def _add_tools(self, env_file_content: str, env_path: str | None = None) -> list[JsonLdNode]:
-        """Register tool nodes derived from a conda environment file."""
+    def _add_tools(self, environment: Any) -> list[JsonLdNode]:
+        """Register tool nodes from installed packages in a job environment."""
         tools_list = []
-        tools = self.tool_resolver.extract_tools_from_yaml(env_file_content, env_path=env_path)
-        if tools:
-            for name, version in tools.items():
-                if name not in self.state.tools:
+        packages = self.tool_resolver.installed_packages(environment)
+        if packages:
+            for name, package in packages.items():
+                version = package["version"]
+                key = f"{name}=={version}"
+                if key not in self.state.tools:
                     item = {
                         "@id": f"local:tool_{self.state.tool_counter}",
                         "@type": "schema:SoftwareApplication",
                         "label": name,
-                        "url": self.tool_resolver.package_urls.get(name),
-                        **({"softwareVersion": version} if version else {}),
+                        "url": package.get("url"),
+                        "softwareVersion": version,
                     }
-                    self.state.tools[name] = item
+                    self.state.tools[key] = item
                     self.state.tool_counter += 1
                     tools_list.append(item)
                 else:
-                    tools_list.append(self.state.tools[name])
+                    tools_list.append(self.state.tools[key])
         return tools_list
