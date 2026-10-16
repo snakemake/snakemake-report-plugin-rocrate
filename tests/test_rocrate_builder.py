@@ -147,10 +147,14 @@ def test_each_action_uses_its_own_environment_tool(
         },
         tools={
             "python==3.11.17": {
-                "@id": "local:python_311", "label": "python", "softwareVersion": "3.11.17"
+                "@id": "local:python_311",
+                "label": "python",
+                "softwareVersion": "3.11.17",
             },
             "python==3.15.0": {
-                "@id": "local:python_315", "label": "python", "softwareVersion": "3.15.0"
+                "@id": "local:python_315",
+                "label": "python",
+                "softwareVersion": "3.15.0",
             },
         },
     )
@@ -296,6 +300,4 @@ def test_named_and_positional_slots_across_jobs(
         assert tool_inputs[0] in refs(f"parameters_{number}.json", "exampleOfWork")
         assert refs(f"#action_{number}", "result") == [f"summary_{number}.json"]
     assert len(refs("experiment.json", "exampleOfWork")) == 2
-    assert all(
-        graph[ref]["name"] not in file_nodes for ref in tool_inputs
-    )
+    assert all(graph[ref]["name"] not in file_nodes for ref in tool_inputs)

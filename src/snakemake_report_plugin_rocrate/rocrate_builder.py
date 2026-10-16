@@ -360,9 +360,7 @@ class ProvenanceRunCrateBuilder:
     ) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
         """Create a distinct tool for each rule and installed-package set."""
         methods = {
-            method["@id"]: method
-            for method in provenance.methods.values()
-            if method.get("@id")
+            method["@id"]: method for method in provenance.methods.values() if method.get("@id")
         }
         action_tool_ids: dict[str, list[str]] = {}
         rule_tool_ids: dict[str, list[str]] = {}
@@ -828,7 +826,7 @@ class ProvenanceRunCrateBuilder:
             )
             del parameter["valueRequired"]
             del parameter["conformsTo"]
-        for tool_id in ([instrument_id] if isinstance(instrument_id, str) else instrument_id or []):
+        for tool_id in [instrument_id] if isinstance(instrument_id, str) else instrument_id or []:
             instrument = self.crate.get(tool_id)
             if instrument is not None:
                 existing = {
@@ -991,9 +989,11 @@ class ProvenanceRunCrateBuilder:
 
         workflow_path = Path(snakefile)
 
-        tools = list(dict.fromkeys(
-            tool_id for rule_tools in (rule_tool_ids or {}).values() for tool_id in rule_tools
-        ))
+        tools = list(
+            dict.fromkeys(
+                tool_id for rule_tools in (rule_tool_ids or {}).values() for tool_id in rule_tools
+            )
+        )
         if not tools:
             tools = [self.main_tool_id or fallback_tool_id]
         properties: dict[str, Any] = {

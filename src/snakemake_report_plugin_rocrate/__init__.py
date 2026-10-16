@@ -67,8 +67,7 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
         default="REQUIRED",
         metadata={
             "help": (
-                "Lowest RO-Crate validation level to inspect; "
-                "only REQUIRED issues fail the report."
+                "Lowest RO-Crate validation level to inspect; only REQUIRED issues fail the report."
             ),
             "choices": ["REQUIRED", "RECOMMENDED", "OPTIONAL"],
             "env_var": False,
