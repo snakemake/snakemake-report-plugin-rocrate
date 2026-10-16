@@ -56,17 +56,9 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
         default="",
         metadata={
             "help": (
-                "Name of the primary software tool. Other discovered tools are "
-                "recorded as its softwareRequirements."
+                "Optional preferred package for rule tool wrappers. When omitted, "
+                "discovered environment tools are direct CreateAction instruments."
             ),
-            "env_var": False,
-            "required": False,
-        },
-    )
-    workflow_inputs: str = field(
-        default="{}",
-        metadata={
-            "help": "JSON object mapping workflow input slot names to external input file paths.",
             "env_var": False,
             "required": False,
         },
@@ -74,7 +66,9 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
     validation_severity: str = field(
         default="REQUIRED",
         metadata={
-            "help": "RO-Crate validation level to enforce.",
+            "help": (
+                "Lowest RO-Crate validation level to inspect; only REQUIRED issues fail the report."
+            ),
             "choices": ["REQUIRED", "RECOMMENDED", "OPTIONAL"],
             "env_var": False,
             "required": False,
