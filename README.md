@@ -14,7 +14,12 @@ This plugin is under active development. Features may be incomplete or subject t
 
 ## Installation
 
-The plugin is not currently published on PyPI and must be installed from Git.
+Install the plugin from PyPI:
+
+```bash
+pip install snakemake-report-plugin-rocrate
+```
+
 Install the latest version directly from GitHub:
 
 ```bash
@@ -184,7 +189,7 @@ snakemake paper.pdf \
 ```
 
 The reporter writes `poisson-equation-workflow-run.zip` in the example
-directory. See the [example README](examples/poisson-equation/snakemake/README.md)
+directory. See the [example README]((https://github.com/snakemake/snakemake-report-plugin-rocrate/blob/main/examples/poisson-equation/snakemake/README.md)
 for more information about the workflow and its configuration.
 
 ## Profile validation
@@ -217,4 +222,4 @@ Local Conda YAML files are included in the crate when Snakemake reports them.
 
 ## Contributing to this repository
 
-Please see [CONTRIBUTING.md](CONTRIBUTING.md).
+Please see [CONTRIBUTING.md](https://github.com/snakemake/snakemake-report-plugin-rocrate/blob/main/CONTRIBUTING.md).
