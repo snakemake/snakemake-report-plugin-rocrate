@@ -252,7 +252,7 @@ class ProvenanceRunCrateBuilder:
         )
         self._add_agent_to_workflow_action()
         control_action_ids = self._add_control_actions(provenance, step_ids)
-        self._add_organize_action(fallback_tool_id, control_action_ids)
+        self._add_organize_action(control_action_ids)
         self._add_profile_creative_works()
         agent = self._add_agent()
         if agent is not None:
@@ -432,10 +432,10 @@ class ProvenanceRunCrateBuilder:
         return action_tool_ids, rule_tool_ids
 
     def _ensure_default_software_application(self) -> str:
-        """Add the workflow engine and a distinct fallback rule executor.
+        """Add Snakemake as the workflow engine and fallback rule instrument.
 
         Returns:
-            The crate identifier of the fallback Snakemake software entity.
+            The crate identifier of the Snakemake software entity.
         """
         snakemake_version = version("snakemake")
         engine_id = "#snakemake"
@@ -452,21 +452,7 @@ class ProvenanceRunCrateBuilder:
                     },
                 )
             )
-        executor_id = "#snakemake-rule-executor"
-        if not self.crate.get(executor_id):
-            self.crate.add(
-                ContextEntity(
-                    self.crate,
-                    executor_id,
-                    properties={
-                        "@type": "SoftwareApplication",
-                        "name": "Snakemake rule executor",
-                        "url": "https://snakemake.readthedocs.io/",
-                        "softwareVersion": snakemake_version,
-                    },
-                )
-            )
-        return executor_id
+        return engine_id
 
     def _add_actions(
         self,
@@ -581,7 +567,6 @@ class ProvenanceRunCrateBuilder:
 
     def _add_organize_action(
         self,
-        fallback_tool_id: str,
         control_action_ids: list[str] | None = None,
     ) -> None:
         """Add the action representing orchestration by Snakemake."""

@@ -52,6 +52,8 @@ def test_workflow_boundary_and_tool_parameters(
     )
     builder.build(provenance)
     graph = {entity.id: entity.properties() for entity in builder.crate.get_entities()}
+    assert "#snakemake" in graph
+    assert "#snakemake-rule-executor" not in graph
 
     def ids(entity_id: str, property_name: str) -> list[str]:
         return [ref["@id"] for ref in as_list(graph[entity_id].get(property_name))]
@@ -109,6 +111,17 @@ def test_single_step_tool_is_not_a_singleton_array() -> None:
     builder._add_how_to_steps("#fallback", {"first": ["#tool-first"]})
     step = builder.crate.get("#how-to-step-first")
     assert step.properties()["workExample"] == {"@id": "#tool-first"}
+
+
+def test_snakemake_is_the_fallback_rule_instrument() -> None:
+    builder = ProvenanceRunCrateBuilder(dag=SimpleNamespace(), settings=ReportSettings())
+    fallback_tool_id = builder._ensure_default_software_application()
+
+    assert fallback_tool_id == "#snakemake"
+    assert builder._instrument_id_for_action("#rule", {}, fallback_tool_id, None) == {
+        "@id": "#snakemake"
+    }
+    assert builder.crate.get("#snakemake-rule-executor") is None
 
 
 def test_each_action_uses_its_own_environment_tool(
