@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 
+from snakemake.logging import logger as snakemake_logger
 from snakemake_interface_report_plugins.reporter import ReporterBase
 from snakemake_interface_report_plugins.settings import ReportSettingsBase
 
@@ -22,10 +23,28 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
     filename: str = field(
         default="",
         metadata={
-            "help": "Output filename stem; the .zip suffix is added automatically.",
+            "help": (
+                "Output filename stem; the .zip suffix is added automatically. "
+                "Ignored in metadata-only mode."
+            ),
             "env_var": False,
             "required": False,
             "unparse_func": str,
+        },
+    )
+    metadata_only: bool = field(
+        default=False,
+        metadata={
+            "help": (
+                "Write only the ro-crate-metadata.json descriptor next to the "
+                "workflow outputs (the current working directory) instead of "
+                "packaging the crate as a ZIP archive. No file is copied, so the "
+                "recorded relative paths resolve against the real workflow files. "
+                "Profile validation is skipped because the crate is not "
+                "self-contained."
+            ),
+            "env_var": False,
+            "required": False,
         },
     )
     run_name: str = field(
@@ -146,12 +165,13 @@ class Reporter(ReporterBase):  # type: ignore[misc]
 
     def render(self) -> None:
 
-        if self.settings.filename:
+        if self.settings.filename and not self.settings.metadata_only:
             validate_filename(str(self.settings.filename))
         provenance_builder = ProvenanceBuilder(
             jobs=self.jobs,
             dag=self.dag,
             external_directory_name=self.external_directory_name,
+            copy_external_files=not self.settings.metadata_only,
         )
 
         with provenance_builder.workspace():
@@ -162,6 +182,12 @@ class Reporter(ReporterBase):  # type: ignore[misc]
                 rules=self.rules,
             )
             crate_path = crate_builder.write(provenance)
+            if self.settings.metadata_only:
+                snakemake_logger.info(
+                    f"RO-Crate metadata written to {crate_path}. "
+                    "Profile validation is skipped in metadata-only mode."
+                )
+                return
             validate_rocrate(
                 crate_path,
                 requirement_severity=self.settings.validation_severity,

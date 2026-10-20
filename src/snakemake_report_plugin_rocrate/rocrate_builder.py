@@ -57,15 +57,19 @@ class ProvenanceRunCrateBuilder:
         self.main_tool_id: str | None = None
 
     def write(self, provenance: ProvenanceResult) -> str:
-        """Build the crate and write it to a ZIP archive.
+        """Build the crate and write it to disk.
 
         Args:
             provenance: Provenance payload extracted from the workflow run.
 
         Returns:
-            The path to the written ZIP archive.
+            The path to the written ZIP archive, or to the
+            ``ro-crate-metadata.json`` descriptor written next to the workflow
+            outputs in metadata-only mode.
         """
         self.build(provenance)
+        if getattr(self.settings, "metadata_only", False):
+            return self._write_metadata_only()
         return self._write_zip()
 
     def _write_zip(self) -> str:
@@ -78,15 +82,40 @@ class ProvenanceRunCrateBuilder:
         self.crate.write_zip(crate_path)
         return crate_path
 
+    def _write_metadata_only(self) -> str:
+        """Write only ``ro-crate-metadata.json`` next to the workflow outputs.
+
+        The descriptor is placed in the crate root (the current working
+        directory, which is where Snakemake resolved every crate-relative path),
+        so the relative paths it records resolve against the real workflow files
+        without copying anything.
+
+        Returns:
+            The path to the written ``ro-crate-metadata.json`` file.
+        """
+        metadata_path = Path.cwd() / "ro-crate-metadata.json"
+        with metadata_path.open("wb") as handle:
+            for _, chunk in self.crate.metadata.stream():
+                handle.write(chunk)
+        return str(metadata_path)
+
     def _output_path(self) -> str:
         """Resolve the output ZIP path for the generated crate.
 
         Returns:
             The ZIP filename for the generated crate.
         """
+        return f"{self._output_dir()}.zip"
+
+    def _output_dir(self) -> str:
+        """Resolve the output stem used for the crate name or directory.
+
+        Returns:
+            The user-provided filename stem, or the default stem.
+        """
         if self.settings.filename:
-            return f"{self.settings.filename}.zip"
-        return f"{self.default_output_stem}.zip"
+            return str(self.settings.filename)
+        return self.default_output_stem
 
     def _apply_rocrate_settings(self) -> None:
         """Apply user-provided name, description, and license values.

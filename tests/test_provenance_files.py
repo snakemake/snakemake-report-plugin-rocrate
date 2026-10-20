@@ -10,8 +10,9 @@ from snakemake_report_plugin_rocrate.provenance_files import FileProvenanceHelpe
 class MockFileProvenanceHelpers(FileProvenanceHelpers):
     """Minimal mock to instantiate the provenance file helper class."""
 
-    def __init__(self) -> None:
+    def __init__(self, copy_external_files: bool = True) -> None:
         self.external_directory_name = "_EXTERNAL"
+        self.copy_external_files = copy_external_files
 
 
 @pytest.fixture
@@ -76,3 +77,18 @@ def test_ingestion_is_idempotent_on_readonly_filesystems(
             "CRITICAL BUG DETECTED: The plugin crashed with a PermissionError "
             "when attempting to overwrite a read-only workflow file descriptor."
         )
+
+
+def test_external_files_are_referenced_without_copying(
+    setup_readonly_mock_environment: str,
+) -> None:
+    """Metadata-only mode references external files by relative path, copying nothing."""
+    mock_ro_file_path = setup_readonly_mock_environment
+    helper = MockFileProvenanceHelpers(copy_external_files=False)
+
+    referenced = helper._copy_external_relative_files(mock_ro_file_path)
+
+    project_dir = Path.cwd()
+    assert referenced == os.path.relpath(mock_ro_file_path, project_dir)
+    assert (project_dir / referenced).resolve() == Path(mock_ro_file_path).resolve()
+    assert not (project_dir / helper.external_directory_name).exists()
