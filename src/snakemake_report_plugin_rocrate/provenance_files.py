@@ -169,7 +169,12 @@ class FileProvenanceHelpers:
         return Path(file_name).is_file()
 
     def _copy_external_relative_files(self, path_str) -> str:
-        """Copy external files into the workspace while preserving structure."""
+        """Copy external files into the workspace while preserving structure.
+
+        In metadata-only mode (``copy_external_files`` disabled) nothing is
+        copied; the file is instead referenced by its path relative to the
+        report directory so the recorded relative path stays valid in place.
+        """
         original_path = Path(path_str).resolve()
         current_dir = Path.cwd().resolve()
 
@@ -177,6 +182,9 @@ class FileProvenanceHelpers:
             return str(original_path.relative_to(current_dir))
         except ValueError:
             pass
+
+        if not getattr(self, "copy_external_files", True):
+            return os.path.relpath(original_path, current_dir)
 
         common_root = os.path.commonpath([str(current_dir), str(original_path)])
         relative_structure = Path(original_path).relative_to(common_root)
