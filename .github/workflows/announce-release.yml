@@ -34,16 +34,16 @@ jobs:
           pr-title: ${{ github.event.head_commit.message }}
           image: "logo_dark.png"
           image-description: "Snakemake Logo"
-          repotitle: "Snakemake Reporter Plugin for Nanopubs"
+          repotitle: "Snakemake Reporter Plugin for Workflow Run RO-Crate"
           message: |
             Beep, Beep - I am your friendly #Snakemake release announcement bot.
             
             There is a new release of the {{ repotitle }} systems. Its version now is {{ version }}!
             
-            Give us some time, and you will automatically find the plugin on #Bioconda and #Pypi.
+            Give us some time, and you will automatically find the plugin on #PyPI.
             
-            This plugin is relevant for Snakemake users willing to publish 
-            your workflow with ROCR easily.
+            This plugin is relevant for Snakemake users willing to get a report
+            of the workflow run as a Workflow Run RO-Crate.
             The maintainer is here on Mastodon @fbartusch.
             
             If you discover any issues, please report them on {{ issue_url }}.
