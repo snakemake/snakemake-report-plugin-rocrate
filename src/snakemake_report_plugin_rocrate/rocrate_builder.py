@@ -6,7 +6,6 @@ instances into concrete RO-Crate ZIP archives.
 
 from __future__ import annotations
 
-import json
 from importlib.metadata import version
 from pathlib import Path
 from typing import Any
@@ -241,18 +240,19 @@ class ProvenanceRunCrateBuilder:
         file_id_map = self._add_data_files(provenance.file_nodes)
         tool_id_map = self._add_tools(provenance.tools)
         fallback_tool_id = self._ensure_default_software_application()
-        step_ids = self._add_how_to_steps(fallback_tool_id)
-        workflow_id = self._add_workflow(fallback_tool_id, step_ids)
+        action_tool_ids, rule_tool_ids = self._add_rule_tools(provenance, tool_id_map)
+        step_ids = self._add_how_to_steps(fallback_tool_id, rule_tool_ids)
+        workflow_id = self._add_workflow(fallback_tool_id, step_ids, rule_tool_ids)
         self._add_actions(
             provenance=provenance,
             file_id_map=file_id_map,
-            tool_id_map=tool_id_map,
+            action_tool_ids=action_tool_ids,
             fallback_tool_id=fallback_tool_id,
             workflow_id=workflow_id,
         )
         self._add_agent_to_workflow_action()
         control_action_ids = self._add_control_actions(provenance, step_ids)
-        self._add_organize_action(fallback_tool_id, control_action_ids)
+        self._add_organize_action(control_action_ids)
         self._add_profile_creative_works()
         agent = self._add_agent()
         if agent is not None:
@@ -336,7 +336,7 @@ class ProvenanceRunCrateBuilder:
         tools: dict[str, dict[str, Any]],
         tool_id_map: dict[str, str],
     ) -> None:
-        """Select the primary tool and attach all others as requirements."""
+        """Validate and remember the preferred installed package, if specified."""
         if not tool_id_map:
             return
 
@@ -353,26 +353,89 @@ class ProvenanceRunCrateBuilder:
             raise WorkflowError(
                 f"Main tool '{requested_name}' was not found. Available tools: {available}."
             )
-        if not requested_name and len(tool_id_map) > 1:
-            available = ", ".join(sorted(tools))
-            raise WorkflowError(
-                "Multiple software tools were found. Select the primary one with "
-                f"--report-rocrate-main-tool. Available tools: {available}."
-            )
+        self.main_tool_id = matching_ids[0] if matching_ids else None
 
-        self.main_tool_id = matching_ids[0] if matching_ids else next(iter(tool_id_map.values()))
-        main_tool = self.crate.get(self.main_tool_id)
-        requirements = [
-            {"@id": tool_id} for tool_id in tool_id_map.values() if tool_id != self.main_tool_id
-        ]
-        if main_tool is not None and requirements:
-            main_tool["softwareRequirements"] = requirements
+    def _add_rule_tools(
+        self, provenance: ProvenanceResult, tool_id_map: dict[str, str]
+    ) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+        """Create a distinct tool for each rule and installed-package set."""
+        methods = {
+            method["@id"]: method for method in provenance.methods.values() if method.get("@id")
+        }
+        action_tool_ids: dict[str, list[str]] = {}
+        rule_tool_ids: dict[str, list[str]] = {}
+        tools_by_signature: dict[tuple[str, str | None, tuple[str, ...]], str] = {}
+        for action in provenance.actions.values():
+            action_id = crate_safe_id(action.get("@id"))
+            if action_id == "#action_workflow_run" or action.get("@type") != "action":
+                continue
+            rule_name = str(action.get("rule", action_id))
+            method_id = reference_id(action.get("realizes method"))
+            method = methods.get(method_id, {}) if method_id else {}
+            preferred_package = self.settings.main_tool.strip().casefold()
+            package_ids = tuple(
+                sorted(
+                    {
+                        tool_id_map[source_id]
+                        for ref in as_list(method.get("implemented by"))
+                        if (source_id := reference_id(ref)) in tool_id_map
+                    },
+                    key=lambda package_id: (
+                        str(self.crate.get(package_id).properties().get("name", "")).casefold()
+                        != preferred_package,
+                        package_id,
+                    ),
+                )
+            )
+            if not preferred_package and package_ids:
+                action_tool_ids[action_id] = list(package_ids)
+                for package_id in package_ids:
+                    if package_id not in rule_tool_ids.setdefault(rule_name, []):
+                        rule_tool_ids[rule_name].append(package_id)
+                continue
+            environment_file = action.get("environment file")
+            signature = (rule_name, environment_file, package_ids)
+            if signature not in tools_by_signature:
+                tool_id = f"#rule-tool-{quote(rule_name, safe='')}-{len(tools_by_signature) + 1}"
+                properties: dict[str, Any] = {
+                    "@type": "SoftwareApplication",
+                    "name": rule_name,
+                    "description": action.get("description", f"Snakemake rule {rule_name}"),
+                }
+                if package_ids:
+                    properties["softwareRequirements"] = [
+                        {"@id": package_id} for package_id in package_ids
+                    ]
+                if environment_file:
+                    properties["subjectOf"] = {"@id": environment_file}
+                self.crate.add(ContextEntity(self.crate, tool_id, properties=properties))
+                tools_by_signature[signature] = tool_id
+                rule_tool_ids.setdefault(rule_name, []).append(tool_id)
+            action_tool_ids[action_id] = [tools_by_signature[signature]]
+        for rule_name, rule in self.rules.items():
+            if rule_name in rule_tool_ids:
+                continue
+            tool_id = f"#rule-tool-{quote(rule_name, safe='')}-{len(tools_by_signature) + 1}"
+            self.crate.add(
+                ContextEntity(
+                    self.crate,
+                    tool_id,
+                    properties={
+                        "@type": "SoftwareApplication",
+                        "name": rule_name,
+                        "description": getattr(rule, "source", None),
+                    },
+                )
+            )
+            tools_by_signature[(rule_name, None, ())] = tool_id
+            rule_tool_ids[rule_name] = [tool_id]
+        return action_tool_ids, rule_tool_ids
 
     def _ensure_default_software_application(self) -> str:
-        """Add the workflow engine and a distinct fallback rule executor.
+        """Add Snakemake as the workflow engine and fallback rule instrument.
 
         Returns:
-            The crate identifier of the fallback Snakemake software entity.
+            The crate identifier of the Snakemake software entity.
         """
         snakemake_version = version("snakemake")
         engine_id = "#snakemake"
@@ -389,27 +452,13 @@ class ProvenanceRunCrateBuilder:
                     },
                 )
             )
-        executor_id = "#snakemake-rule-executor"
-        if not self.crate.get(executor_id):
-            self.crate.add(
-                ContextEntity(
-                    self.crate,
-                    executor_id,
-                    properties={
-                        "@type": "SoftwareApplication",
-                        "name": "Snakemake rule executor",
-                        "url": "https://snakemake.readthedocs.io/",
-                        "softwareVersion": snakemake_version,
-                    },
-                )
-            )
-        return executor_id
+        return engine_id
 
     def _add_actions(
         self,
         provenance: ProvenanceResult,
         file_id_map: dict[str, str],
-        tool_id_map: dict[str, str],
+        action_tool_ids: dict[str, list[str]],
         fallback_tool_id: str,
         workflow_id: str | None,
     ) -> None:
@@ -418,7 +467,7 @@ class ProvenanceRunCrateBuilder:
         Args:
             provenance: Complete provenance payload.
             file_id_map: Mapping from provenance file IDs to crate file IDs.
-            tool_id_map: Mapping from provenance tool IDs to crate tool IDs.
+            action_tool_ids: Mapping from action IDs to their execution tools.
             fallback_tool_id: Crate ID of the fallback software entity.
             workflow_id: Crate ID of the main workflow entity, when present.
 
@@ -430,26 +479,7 @@ class ProvenanceRunCrateBuilder:
             for file_node in provenance.file_nodes.values()
             if file_node.get("@id")
         }
-        methods_by_id = {
-            method_node["@id"]: method_node
-            for method_node in provenance.methods.values()
-            if method_node.get("@id")
-        }
         action_refs: list[dict[str, str]] = []
-        try:
-            workflow_inputs = json.loads(getattr(self.settings, "workflow_inputs", "{}"))
-        except (TypeError, ValueError) as error:
-            raise WorkflowError(
-                "--report-rocrate-workflow-inputs must be a JSON object."
-            ) from error
-        if not isinstance(workflow_inputs, dict) or any(
-            not isinstance(name, str) or not name or not isinstance(path, str)
-            for name, path in workflow_inputs.items()
-        ):
-            raise WorkflowError(
-                "--report-rocrate-workflow-inputs must map slot names to file paths."
-            )
-
         # Preserve first-seen ordering while deduplicating shared file values.
         job_edges = {"has input": {}, "has output": {}}
         for node in provenance.actions.values():
@@ -475,30 +505,32 @@ class ProvenanceRunCrateBuilder:
             ],
         }
 
-        external_inputs = {
-            file_nodes_by_id[reference_id(ref)]["label"]
-            for ref in workflow_edges["has input"]
-            if reference_id(ref) in file_nodes_by_id
-        }
-        unknown = set(workflow_inputs.values()) - external_inputs
-        if unknown:
-            raise WorkflowError(
-                f"Workflow input mappings must name external input files: {sorted(unknown)}"
-            )
+        input_slots_by_path: dict[str, str] = {}
+        for ref in workflow_edges["has input"]:
+            ref_id = reference_id(ref)
+            if ref_id not in file_nodes_by_id:
+                continue
+            path = file_nodes_by_id[ref_id]["label"]
+            slot = ref.get("parameter slot") if ref.get("parameter named") else None
+            base_name = str(slot or Path(path).name)
+            name = base_name
+            suffix = 2
+            while name in input_slots_by_path.values():
+                name = f"{base_name}_{suffix}"
+                suffix += 1
+            input_slots_by_path[path] = name
 
         for action_node in provenance.actions.values():
             if action_node.get("@type") != "action":
                 continue
 
             action_id = crate_safe_id(action_node.get("@id"))
-            instrument_id = self._instrument_id_for_action(
-                action_node=action_node,
+            instrument_ids = self._instrument_id_for_action(
                 action_id=action_id,
-                methods_by_id=methods_by_id,
-                tool_id_map=tool_id_map,
+                action_tool_ids=action_tool_ids,
                 fallback_tool_id=fallback_tool_id,
                 workflow_id=workflow_id,
-            )["@id"]
+            )
             edges = workflow_edges if action_id == "#action_workflow_run" else action_node
             input_parameters = []
             output_parameters = []
@@ -513,10 +545,10 @@ class ProvenanceRunCrateBuilder:
                     file_refs=as_list(edges.get(source_key)),
                     file_id_map=file_id_map,
                     file_nodes_by_id=file_nodes_by_id,
-                    instrument_id=instrument_id,
+                    instrument_id=[ref["@id"] for ref in as_list(instrument_ids)],
                     parameter_rule=str(action_node.get("rule", action_id.removeprefix("#"))),
                     target=target,
-                    workflow_inputs=workflow_inputs,
+                    input_slots_by_path=input_slots_by_path,
                 )
 
             self._add_action(
@@ -524,8 +556,7 @@ class ProvenanceRunCrateBuilder:
                 action_id=action_id,
                 input_parameters=input_parameters,
                 output_parameters=output_parameters,
-                methods_by_id=methods_by_id,
-                tool_id_map=tool_id_map,
+                action_tool_ids=action_tool_ids,
                 fallback_tool_id=fallback_tool_id,
                 workflow_id=workflow_id,
             )
@@ -536,7 +567,6 @@ class ProvenanceRunCrateBuilder:
 
     def _add_organize_action(
         self,
-        fallback_tool_id: str,
         control_action_ids: list[str] | None = None,
     ) -> None:
         """Add the action representing orchestration by Snakemake."""
@@ -648,18 +678,21 @@ class ProvenanceRunCrateBuilder:
             control_action_ids.append(control_action_id)
         return control_action_ids
 
-    def _add_how_to_steps(self, fallback_tool_id: str) -> list[str]:
+    def _add_how_to_steps(
+        self, fallback_tool_id: str, rule_tool_ids: dict[str, list[str]]
+    ) -> list[str]:
         """Add one workflow description step for each Snakemake rule."""
         step_ids = []
-        tool_id = self.main_tool_id or fallback_tool_id
         for _, (rule_name, rule) in enumerate(self.rules.items(), start=1):
             step_id = f"#how-to-step-{rule_name}"
             source = getattr(rule, "source", None)
+            tools = rule_tool_ids.get(rule_name) or [self.main_tool_id or fallback_tool_id]
+            work_examples = [{"@id": tool_id} for tool_id in tools]
             properties: dict[str, Any] = {
                 "@type": "HowToStep",
                 "name": rule.name or rule_name,
                 "description": source,
-                "workExample": {"@id": tool_id},
+                "workExample": work_examples[0] if len(work_examples) == 1 else work_examples,
             }
             self.crate.add(
                 ContextEntity(
@@ -678,10 +711,10 @@ class ProvenanceRunCrateBuilder:
         file_refs: list[Any],
         file_id_map: dict[str, str],
         file_nodes_by_id: dict[str, dict[str, Any]],
-        instrument_id: str | None,
+        instrument_id: str | list[str] | None,
         target: list[dict[str, str]],
         parameter_rule: str,
-        workflow_inputs: dict[str, str],
+        input_slots_by_path: dict[str, str],
     ) -> None:
         """Create action value and formal parameter entities for an edge list.
 
@@ -703,9 +736,9 @@ class ProvenanceRunCrateBuilder:
                 continue
             if action_id == "#action_workflow_run" and direction == "input":
                 path = file_nodes_by_id.get(file_ref_id, {}).get("label")
-                slots = [name for name, value in workflow_inputs.items() if value == path]
+                slot = input_slots_by_path.get(path)
                 value_ref = {"@id": file_id_map.get(file_ref_id, crate_safe_id(file_ref_id))}
-                for slot in slots:
+                if slot is not None:
                     parameter = self._add_formal_parameter(
                         direction=direction,
                         rule="workflow",
@@ -759,7 +792,7 @@ class ProvenanceRunCrateBuilder:
         slot: str,
         named: bool,
         scope: str,
-        instrument_id: str | None,
+        instrument_id: str | list[str] | None,
         additional_type: str = "File",
     ) -> Any:
         """Reuse a rule slot across executions, independently of file values."""
@@ -778,8 +811,8 @@ class ProvenanceRunCrateBuilder:
             )
             del parameter["valueRequired"]
             del parameter["conformsTo"]
-        if instrument_id:
-            instrument = self.crate.get(instrument_id)
+        for tool_id in [instrument_id] if isinstance(instrument_id, str) else instrument_id or []:
+            instrument = self.crate.get(tool_id)
             if instrument is not None:
                 existing = {
                     reference_id(ref) for ref in as_list(instrument.properties().get(direction))
@@ -854,8 +887,7 @@ class ProvenanceRunCrateBuilder:
         action_id: str,
         input_parameters: list[dict[str, str]],
         output_parameters: list[dict[str, str]],
-        methods_by_id: dict[str, dict[str, Any]],
-        tool_id_map: dict[str, str],
+        action_tool_ids: dict[str, list[str]],
         fallback_tool_id: str,
         workflow_id: str | None,
     ) -> ContextEntity:
@@ -868,8 +900,7 @@ class ProvenanceRunCrateBuilder:
                 action inputs.
             output_parameters: File or PropertyValue references representing
                 action outputs.
-            methods_by_id: Method-node lookup keyed by provenance ``@id``.
-            tool_id_map: Mapping from provenance tool IDs to crate tool IDs.
+            action_tool_ids: Mapping from action IDs to their execution tools.
             fallback_tool_id: Crate ID of the fallback software entity.
             workflow_id: Crate ID of the main workflow entity, when present.
 
@@ -880,10 +911,8 @@ class ProvenanceRunCrateBuilder:
             "@type": "CreateAction",
             "name": action_node.get("label", action_id),
             "instrument": self._instrument_id_for_action(
-                action_node=action_node,
                 action_id=action_id,
-                methods_by_id=methods_by_id,
-                tool_id_map=tool_id_map,
+                action_tool_ids=action_tool_ids,
                 fallback_tool_id=fallback_tool_id,
                 workflow_id=workflow_id,
             ),
@@ -910,32 +939,23 @@ class ProvenanceRunCrateBuilder:
 
     def _instrument_id_for_action(
         self,
-        action_node: dict[str, Any],
         action_id: str,
-        methods_by_id: dict[str, dict[str, Any]],
-        tool_id_map: dict[str, str],
+        action_tool_ids: dict[str, list[str]],
         fallback_tool_id: str,
         workflow_id: str | None,
-    ) -> dict[str, str]:
+    ) -> dict[str, str] | list[dict[str, str]]:
         """Resolve the workflow or software instrument for an action."""
         if action_id == "#action_workflow_run":
             return {"@id": workflow_id or fallback_tool_id}
-        if self.main_tool_id:
-            return {"@id": self.main_tool_id}
-
-        method_id = reference_id(action_node.get("realizes method"))
-        method_node = methods_by_id.get(method_id, {}) if method_id else {}
-        for tool_ref in as_list(method_node.get("implemented by")):
-            tool_id = reference_id(tool_ref)
-            crate_tool_id = tool_id_map.get(tool_id) if tool_id else None
-            if crate_tool_id:
-                return {"@id": crate_tool_id}
-        return {"@id": fallback_tool_id}
+        instruments = action_tool_ids.get(action_id, [fallback_tool_id])
+        refs = [{"@id": tool_id} for tool_id in instruments]
+        return refs[0] if len(refs) == 1 else refs
 
     def _add_workflow(
         self,
         fallback_tool_id: str,
         step_ids: list[str] | None = None,
+        rule_tool_ids: dict[str, list[str]] | None = None,
     ) -> str | None:
         """Add the Snakefile as the main workflow entity when available.
 
@@ -954,7 +974,13 @@ class ProvenanceRunCrateBuilder:
 
         workflow_path = Path(snakefile)
 
-        tool_id = self.main_tool_id or fallback_tool_id
+        tools = list(
+            dict.fromkeys(
+                tool_id for rule_tools in (rule_tool_ids or {}).values() for tool_id in rule_tools
+            )
+        )
+        if not tools:
+            tools = [self.main_tool_id or fallback_tool_id]
         properties: dict[str, Any] = {
             "@type": [
                 "File",
@@ -962,7 +988,7 @@ class ProvenanceRunCrateBuilder:
                 "ComputationalWorkflow",
                 "HowTo",
             ],
-            "hasPart": {"@id": tool_id},
+            "hasPart": [{"@id": tool_id} for tool_id in tools],
             "encodingFormat": "text/plain",
             "conformsTo": {
                 "@id": "https://bioschemas.org/profiles/ComputationalWorkflow/1.0-RELEASE"
