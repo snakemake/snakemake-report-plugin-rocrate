@@ -67,8 +67,9 @@ class ProvenanceRunCrateBuilder:
         """
         self.build(provenance)
         if getattr(self.settings, "metadata_only", False):
-            metadata_file = self._write_metadata_only()
-            return Path(metadata_file).parent
+            crate_path = Path.cwd()
+            self.crate.metadata.write(crate_path)
+            return crate_path
         return self._write_zip()
 
     def _write_zip(self) -> str:
@@ -80,23 +81,6 @@ class ProvenanceRunCrateBuilder:
         crate_path = self._output_path()
         self.crate.write_zip(crate_path)
         return crate_path
-
-    def _write_metadata_only(self) -> str:
-        """Write only ``ro-crate-metadata.json`` next to the workflow outputs.
-
-        The descriptor is placed in the crate root (the current working
-        directory, which is where Snakemake resolved every crate-relative path),
-        so the relative paths it records resolve against the real workflow files
-        without copying anything.
-
-        Returns:
-            The path to the written ``ro-crate-metadata.json`` file.
-        """
-        metadata_path = Path.cwd() / "ro-crate-metadata.json"
-        with metadata_path.open("wb") as handle:
-            for _, chunk in self.crate.metadata.stream():
-                handle.write(chunk)
-        return str(metadata_path)
 
     def _output_path(self) -> str:
         """Resolve the output ZIP path for the generated crate.
