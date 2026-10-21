@@ -60,8 +60,7 @@ working directory (the current working directory, i.e. next to the Snakefile and
 the workflow outputs) instead of packaging the crate as a ZIP archive. No file is
 copied: the descriptor's relative paths resolve against the real workflow files
 in place, and files that live outside the working directory are referenced by
-their path relative to it. Because the crate is not self-contained, profile
-validation is skipped. For example, running the FEniCS/DOLFINx example with
+their path relative to it. For example, running the FEniCS/DOLFINx example with
 `--report-rocrate-metadata-only` writes `ro-crate-metadata.json` alongside its
 `Snakefile`.
 

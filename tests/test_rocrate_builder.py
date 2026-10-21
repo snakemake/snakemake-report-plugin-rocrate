@@ -130,9 +130,10 @@ def test_metadata_only_writes_only_the_json_descriptor(
         dag=SimpleNamespace(workflow=SimpleNamespace(main_snakefile="Snakefile")),
         settings=ReportSettings(metadata_only=True, main_tool="solver"),
     )
-    metadata_path = Path(builder.write(provenance))
+    crate_path = Path(builder.write(provenance))
 
-    assert metadata_path == tmp_path / "ro-crate-metadata.json"
+    assert crate_path == tmp_path
+    metadata_path = crate_path / "ro-crate-metadata.json"
     assert metadata_path.is_file()
     # No data files are copied: only the original workflow files plus the
     # descriptor remain, and no temporary external workspace is created.

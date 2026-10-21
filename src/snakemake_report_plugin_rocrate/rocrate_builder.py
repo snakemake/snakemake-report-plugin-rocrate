@@ -62,13 +62,13 @@ class ProvenanceRunCrateBuilder:
             provenance: Provenance payload extracted from the workflow run.
 
         Returns:
-            The path to the written ZIP archive, or to the
-            ``ro-crate-metadata.json`` descriptor written next to the workflow
-            outputs in metadata-only mode.
+            The path to the written ZIP archive, or to the directory that
+            contains ``ro-crate-metadata.json`` in metadata-only mode.
         """
         self.build(provenance)
         if getattr(self.settings, "metadata_only", False):
-            return self._write_metadata_only()
+            metadata_file = self._write_metadata_only()
+            return Path(metadata_file).parent
         return self._write_zip()
 
     def _write_zip(self) -> str:
