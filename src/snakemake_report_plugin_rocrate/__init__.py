@@ -39,9 +39,7 @@ class ReportSettings(ReportSettingsBase):  # type: ignore[misc]
                 "Write only the ro-crate-metadata.json descriptor next to the "
                 "workflow outputs (the current working directory) instead of "
                 "packaging the crate as a ZIP archive. No file is copied, so the "
-                "recorded relative paths resolve against the real workflow files. "
-                "Profile validation is skipped because the crate is not "
-                "self-contained."
+                "recorded relative paths resolve against the real workflow files."
             ),
             "env_var": False,
             "required": False,
@@ -182,12 +180,7 @@ class Reporter(ReporterBase):  # type: ignore[misc]
                 rules=self.rules,
             )
             crate_path = crate_builder.write(provenance)
-            if self.settings.metadata_only:
-                snakemake_logger.info(
-                    f"RO-Crate metadata written to {crate_path}. "
-                    "Profile validation is skipped in metadata-only mode."
-                )
-                return
+            snakemake_logger.info(f"Crate path: {crate_path}")
             validate_rocrate(
                 crate_path,
                 requirement_severity=self.settings.validation_severity,
