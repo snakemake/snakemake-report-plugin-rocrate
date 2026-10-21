@@ -204,9 +204,16 @@ class ProvenanceRunCrateBuilder:
             if Path(file.dest_path).name.casefold() == "readme.md":
                 properties["encodingFormat"] = "text/markdown"
                 properties["about"] = {"@id": "./"}
+            if file.source_path.startswith(".."):
+                source = f"file://{Path(file.source_path).resolve()}"
+                dest_path = None
+            else:
+                source = file.source_path
+                dest_path = file.dest_path
+
             self.crate.add_file(
-                file.source_path,
-                dest_path=file.dest_path,
+                source,
+                dest_path=dest_path,
                 properties=properties,
             )
 
@@ -226,10 +233,15 @@ class ProvenanceRunCrateBuilder:
                 raise WorkflowError(
                     f"Data file must have a crate-relative destination: {file_path}"
                 )
-            source = Path(file_node.get("source path", file_path))
+            if file_path.startswith(".."):
+                source = f"file://{Path(file_path).resolve()}"
+                dest_path = None
+            else:
+                source = Path(file_node.get("source path", file_path))
+                dest_path = file_path
             self.crate.add_file(
                 source,
-                dest_path=file_path,
+                dest_path=dest_path,
                 properties={
                     "name": file_node.get("label", file_path),
                     "encodingFormat": get_mime_type(file_path),
