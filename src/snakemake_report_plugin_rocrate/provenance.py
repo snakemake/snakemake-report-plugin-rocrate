@@ -41,6 +41,7 @@ class ProvenanceBuilder(
         jobs,
         dag,
         external_directory_name: str = "_EXTERNAL",
+        copy_external_files: bool = True,
     ):
         """Initialize the builder with Snakemake runtime objects.
 
@@ -50,6 +51,10 @@ class ProvenanceBuilder(
                 commands, and conda environments.
             external_directory_name: Working directory name used for copied
                 files that live outside the current report directory.
+            copy_external_files: When False, files outside the report directory
+                are referenced by their path relative to it instead of being
+                copied into a temporary workspace. Used by metadata-only mode,
+                which must not copy any file.
 
         Returns:
             None.
@@ -57,6 +62,7 @@ class ProvenanceBuilder(
         self.jobs = jobs
         self.dag = dag
         self.external_directory_name = external_directory_name
+        self.copy_external_files = copy_external_files
         self.state = ProvenanceState()
         self.tool_resolver = ToolResolver()
 
@@ -94,6 +100,8 @@ class ProvenanceBuilder(
         Returns:
             None.
         """
+        if not self.copy_external_files:
+            return
         target_dir = Path(self.external_directory_name)
         if target_dir.exists():
             shutil.rmtree(target_dir)
@@ -119,6 +127,8 @@ class ProvenanceBuilder(
         Returns:
             None.
         """
+        if not self.copy_external_files:
+            return
         target_dir = Path(self.external_directory_name)
         if target_dir.exists():
             shutil.rmtree(target_dir)

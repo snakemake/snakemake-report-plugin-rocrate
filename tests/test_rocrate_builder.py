@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -96,6 +97,62 @@ def test_workflow_boundary_and_tool_parameters(
         archive_path = tmp_path / "profile-05.zip"
         builder.crate.write_zip(archive_path)
         validate_rocrate(archive_path)
+
+
+def test_metadata_only_writes_only_the_json_descriptor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    Path("Snakefile").write_text("rule all:\n    input: 'final.txt'\n")
+    for name in ("source.txt", "final.txt"):
+        Path(name).write_text(name)
+
+    def action(name: str, inputs: list[str], outputs: list[str]) -> dict:
+        return {
+            "@id": f"local:{name}",
+            "@type": "action",
+            "rule": name,
+            "has input": [{"@id": f"local:{value}"} for value in inputs],
+            "has output": [{"@id": f"local:{value}"} for value in outputs],
+        }
+
+    files = ["source.txt", "final.txt"]
+    provenance = ProvenanceResult(
+        file_nodes={name: {"@id": f"local:{name}", "label": name} for name in files},
+        actions={
+            "workflow": action("action_workflow_run", [], []),
+            "first": action("first", ["source.txt"], ["final.txt"]),
+        },
+        methods={},
+        tools={"tool": {"@id": "local:tool", "label": "solver"}},
+    )
+    builder = ProvenanceRunCrateBuilder(
+        dag=SimpleNamespace(workflow=SimpleNamespace(main_snakefile="Snakefile")),
+        settings=ReportSettings(metadata_only=True, main_tool="solver"),
+    )
+    crate_path = Path(builder.write(provenance))
+
+    assert crate_path == tmp_path
+    metadata_path = crate_path / "ro-crate-metadata.json"
+    assert metadata_path.is_file()
+    # No data files are copied: only the original workflow files plus the
+    # descriptor remain, and no temporary external workspace is created.
+    assert sorted(path.name for path in tmp_path.iterdir()) == [
+        "Snakefile",
+        "final.txt",
+        "ro-crate-metadata.json",
+        "source.txt",
+    ]
+    descriptor = json.loads(metadata_path.read_text(encoding="utf-8"))
+    assert "@context" in descriptor
+    assert "@graph" in descriptor
+    graph_ids = {node["@id"] for node in descriptor["@graph"]}
+    assert "ro-crate-metadata.json" in graph_ids
+    assert "Snakefile" in graph_ids
+    assert "final.txt" in graph_ids
+    # Every file descriptor's relative path resolves against the crate root.
+    for file_name in ("Snakefile", "source.txt", "final.txt"):
+        assert (tmp_path / file_name).is_file()
 
 
 def test_timestamps_use_validator_compatible_milliseconds() -> None:

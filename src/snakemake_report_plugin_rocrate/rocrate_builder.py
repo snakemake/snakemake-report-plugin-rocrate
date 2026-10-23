@@ -56,15 +56,20 @@ class ProvenanceRunCrateBuilder:
         self.main_tool_id: str | None = None
 
     def write(self, provenance: ProvenanceResult) -> str:
-        """Build the crate and write it to a ZIP archive.
+        """Build the crate and write it to disk.
 
         Args:
             provenance: Provenance payload extracted from the workflow run.
 
         Returns:
-            The path to the written ZIP archive.
+            The path to the written ZIP archive, or to the directory that
+            contains ``ro-crate-metadata.json`` in metadata-only mode.
         """
         self.build(provenance)
+        if getattr(self.settings, "metadata_only", False):
+            crate_path = Path.cwd()
+            self.crate.metadata.write(crate_path)
+            return crate_path
         return self._write_zip()
 
     def _write_zip(self) -> str:
@@ -83,9 +88,17 @@ class ProvenanceRunCrateBuilder:
         Returns:
             The ZIP filename for the generated crate.
         """
+        return f"{self._output_dir()}.zip"
+
+    def _output_dir(self) -> str:
+        """Resolve the output stem used for the crate name or directory.
+
+        Returns:
+            The user-provided filename stem, or the default stem.
+        """
         if self.settings.filename:
-            return f"{self.settings.filename}.zip"
-        return f"{self.default_output_stem}.zip"
+            return str(self.settings.filename)
+        return self.default_output_stem
 
     def _apply_rocrate_settings(self) -> None:
         """Apply user-provided name, description, and license values.

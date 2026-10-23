@@ -50,7 +50,19 @@ All reporter options use the prefix `--report-rocrate-`.
 
 Sets the output filename without the `.zip` suffix. For example,
 `--report-rocrate-filename workflow-run` creates `workflow-run.zip`. If this
-argument is omitted, the reporter creates `ro-crate.zip`.
+argument is omitted, the reporter creates `ro-crate.zip`. This argument is
+ignored in metadata-only mode.
+
+### `metadata-only`
+
+Writes only the `ro-crate-metadata.json` descriptor directly into the workflow
+working directory (the current working directory, i.e. next to the Snakefile and
+the workflow outputs) instead of packaging the crate as a ZIP archive. No file is
+copied: the descriptor's relative paths resolve against the real workflow files
+in place, and files that live outside the working directory are referenced by
+their path relative to it. For example, running the FEniCS/DOLFINx example with
+`--report-rocrate-metadata-only` writes `ro-crate-metadata.json` alongside its
+`Snakefile`.
 
 ### `run-name`
 
