@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = [
     { name = "Felix Bartusch", email = "felix.bartusch@uni-tuebingen.de" },
     { name = "Mahdi Jafarkhani", email = "mahdi.jafarkhani@tik.uni-stuttgart.de" },
-    { name = "Simone Leo" }
+    { name = "Simone Leo", email = "simone.leo@crs4.it" }
 ]
 description = "Snakemake report plugin that creates Provenance Run RO-Crates of workflow runs"
 readme = "README.md"
@@ -30,7 +30,7 @@ dependencies = [
     "markdown-it-py (>=2.2,<3.0.0)"
 ]
 [project.urls]
-Homepage = "https://www.researchobject.org/workflow-run-crate/"
+Homepage = "https://github.com/snakemake/snakemake-report-plugin-rocrate"
 Repository = "https://github.com/snakemake/snakemake-report-plugin-rocrate"
 Documentation = "https://snakemake.github.io/snakemake-plugin-catalog/plugins/report/rocrate.html"
 Issues = "https://github.com/snakemake/snakemake-report-plugin-rocrate/issues"
