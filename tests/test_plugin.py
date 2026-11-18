@@ -1,6 +1,22 @@
 import pytest
 import snakemake.common.tests
+from snakemake.exceptions import WorkflowError
 from snakemake_interface_report_plugins.settings import ReportSettingsBase
+
+from snakemake_report_plugin_rocrate import Reporter, ReportSettings
+
+
+def test_report_without_completed_job_metadata_exits_cleanly(monkeypatch):
+    reporter = object.__new__(Reporter)
+    reporter.jobs = []
+    reporter.settings = ReportSettings()
+
+    def unexpected_builder(*args, **kwargs):
+        pytest.fail("The reporter must exit before creating a provenance workspace")
+
+    monkeypatch.setattr("snakemake_report_plugin_rocrate.ProvenanceBuilder", unexpected_builder)
+    with pytest.raises(WorkflowError, match="Run the requested workflow targets first"):
+        reporter.render()
 
 
 # Check out the base classes found here for all possible options and methods:

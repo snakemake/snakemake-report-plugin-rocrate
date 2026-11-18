@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 
+from snakemake.exceptions import WorkflowError
 from snakemake.logging import logger as snakemake_logger
 from snakemake_interface_report_plugins.reporter import ReporterBase
 from snakemake_interface_report_plugins.settings import ReportSettingsBase
@@ -156,7 +157,13 @@ class Reporter(ReporterBase):  # type: ignore[misc]
     external_directory_name = "_EXTERNAL"
 
     def render(self) -> None:
-
+        if not self.jobs:
+            raise WorkflowError(
+                "No completed job metadata is available for this report. "
+                "Run the requested workflow targets first, then rerun with "
+                "--reporter rocrate. If the targets were already run, check "
+                "that their Snakemake metadata in .snakemake was not removed."
+            )
         if self.settings.filename and not self.settings.metadata_only:
             validate_filename(str(self.settings.filename))
         provenance_builder = ProvenanceBuilder(
