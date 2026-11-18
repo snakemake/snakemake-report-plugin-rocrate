@@ -6,12 +6,14 @@ from snakemake_interface_report_plugins.settings import ReportSettingsBase
 from snakemake_report_plugin_rocrate import Reporter, ReportSettings
 
 
-def test_report_without_completed_job_metadata_exits_cleanly(monkeypatch):
+def test_report_without_completed_job_metadata_exits_cleanly(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     reporter = object.__new__(Reporter)
     reporter.jobs = []
     reporter.settings = ReportSettings()
 
-    def unexpected_builder(*args, **kwargs):
+    def unexpected_builder(**kwargs: object) -> None:
         pytest.fail("The reporter must exit before creating a provenance workspace")
 
     monkeypatch.setattr("snakemake_report_plugin_rocrate.ProvenanceBuilder", unexpected_builder)
