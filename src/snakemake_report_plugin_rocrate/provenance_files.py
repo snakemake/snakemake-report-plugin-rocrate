@@ -9,6 +9,7 @@ from pathlib import Path
 from snakemake_report_plugin_rocrate.jsonld import JsonLdNode, JsonLdNodeMap
 from snakemake_report_plugin_rocrate.models import CrateFile
 from snakemake_report_plugin_rocrate.utils import get_mime_type
+from snakemake_report_plugin_rocrate.workflow_path import main_snakefile_path
 
 logger = logging.getLogger(__name__)
 
@@ -67,8 +68,8 @@ class FileProvenanceHelpers:
             return
         snakefile_name, snakepath = snakefile
         self._add_supplemental_file(
+            str(snakepath),
             snakefile_name,
-            snakepath,
             "text/x-python",
         )
 
@@ -156,13 +157,11 @@ class FileProvenanceHelpers:
         return script_path, file_paths
 
     def _find_snakefile(self):
-        """Return the configured Snakefile name and relative path when available."""
-        snakefile = self.dag.workflow.main_snakefile
-        if not snakefile:
+        """Return the Snakefile archive name and source path when available."""
+        snakefile_path = main_snakefile_path(self.dag.workflow)
+        if snakefile_path is None:
             return None
-
-        snakefile_path = Path(snakefile)
-        return snakefile_path.name, os.path.relpath(snakefile_path)
+        return snakefile_path.name, snakefile_path
 
     def _is_file(self, file_name: str) -> bool:
         """Return whether a path currently exists as a regular file."""

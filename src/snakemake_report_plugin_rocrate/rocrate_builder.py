@@ -24,6 +24,7 @@ from snakemake_report_plugin_rocrate.jsonld import (
 )
 from snakemake_report_plugin_rocrate.models import ProvenanceResult
 from snakemake_report_plugin_rocrate.utils import get_mime_type
+from snakemake_report_plugin_rocrate.workflow_path import main_snakefile_path
 
 WORKFLOW_RUN_CONTEXT = "https://w3id.org/ro/terms/workflow-run/context"
 DEFAULT_PROVENANCE_RUN_CRATE_NAME = "Snakemake Provenance Run"
@@ -980,12 +981,9 @@ class ProvenanceRunCrateBuilder:
         Returns:
             The workflow entity ID, or ``None`` when no Snakefile is available.
         """
-        snakefile = self.dag.workflow.main_snakefile
-
-        if not snakefile:
+        workflow_path = main_snakefile_path(self.dag.workflow)
+        if workflow_path is None:
             return None
-
-        workflow_path = Path(snakefile)
 
         tools = list(
             dict.fromkeys(

@@ -1,4 +1,5 @@
 import json
+import zipfile
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -7,9 +8,39 @@ import pytest
 from snakemake_report_plugin_rocrate import ReportSettings
 from snakemake_report_plugin_rocrate.jsonld import as_list
 from snakemake_report_plugin_rocrate.models import CrateFile, ProvenanceResult
+from snakemake_report_plugin_rocrate.provenance_files import FileProvenanceHelpers
 from snakemake_report_plugin_rocrate.provenance_graph import ProvenanceGraphHelpers
 from snakemake_report_plugin_rocrate.rocrate_builder import ProvenanceRunCrateBuilder
 from snakemake_report_plugin_rocrate.validator import validate_rocrate
+
+
+def test_snakefile_outside_workdir_is_archived(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workflow_dir = tmp_path / "workflows"
+    workflow_dir.mkdir()
+    (workflow_dir / "Snakefile").write_text("rule all:\n    input: 'done.txt'\n")
+    output_dir = tmp_path / ".test"
+    output_dir.mkdir()
+    monkeypatch.chdir(output_dir)
+    dag = SimpleNamespace(
+        workflow=SimpleNamespace(main_snakefile="workflows/Snakefile", rundir=str(tmp_path))
+    )
+
+    helper = FileProvenanceHelpers()
+    helper.dag = dag
+    helper.state = SimpleNamespace(supplemental_files={})
+    helper._add_snakefile_supplemental_file()
+    snakefile = helper.state.supplemental_files["Snakefile"]
+    assert Path(snakefile.source_path) == workflow_dir / "Snakefile"
+
+    builder = ProvenanceRunCrateBuilder(dag=dag, settings=ReportSettings())
+    provenance = ProvenanceResult(
+        file_nodes={}, actions={}, methods={}, tools={}, supplemental_files=[snakefile]
+    )
+    archive_path = Path(builder.write(provenance))
+    with zipfile.ZipFile(archive_path) as archive:
+        assert archive.read("Snakefile") == (workflow_dir / "Snakefile").read_bytes()
 
 
 @pytest.mark.parametrize("with_tool", [True, False])
