@@ -1,9 +1,10 @@
 """Resolve the main Snakefile independently of Snakemake's output directory."""
 
 from pathlib import Path
+from typing import Any
 
 
-def main_snakefile_path(workflow) -> Path | None:
+def main_snakefile_path(workflow: Any) -> Path | None:
     """Return the source path supplied by Snakemake for the main Snakefile."""
     snakefile = workflow.main_snakefile
     if not snakefile:
