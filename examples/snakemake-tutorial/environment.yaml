@@ -2,7 +2,6 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python
   - pip
   - snakemake >=9.17.2,<10
   - bwa ~=0.7.17
