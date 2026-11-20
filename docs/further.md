@@ -44,9 +44,8 @@ for example `profiles/rocrate/config.yaml`:
 
 ```yaml
 report-rocrate-filename: "workflow-run"
-report-rocrate-run-name: "Linear elastic plate with a hole"
+report-rocrate-run-name: "Genome Example"
 report-rocrate-run-license: "CC-BY-4.0"
-report-rocrate-main-tool: "fenics-dolfinx"
 report-rocrate-validation-severity: "REQUIRED"
 report-rocrate-agent-orcid: "https://orcid.org/0009-0008-6162-8404"
 report-rocrate-agent-name: "Mahdi Jafarkhani"
@@ -55,10 +54,11 @@ report-rocrate-organization-name: "University of Stuttgart"
 report-rocrate-organization-url: "https://www.uni-stuttgart.de/en/"
 ```
 
-and then run:
+From the tutorial example directory, after running the workflow, generate the
+report with:
 
 ```bash
-snakemake --software-deployment-method conda --reporter rocrate --profile profiles/rocrate --cores 1
+snakemake --cores 2 --reporter rocrate --profile profiles/rocrate
 ```
 
 ### People and organizations
@@ -112,7 +112,6 @@ so that all of them are included.
 
 ### Examples
 
-The [repository](https://github.com/snakemake/snakemake-report-plugin-rocrate/tree/main/examples)
-contains two example workflows, a linear-elastic plate with a hole (FEniCS/DOLFINx)
-and a Poisson equation solved and written up as a PDF. Each comes with
-`profiles/rocrate` and `profiles/rocrate-metadata-only` configurations.
+The [Snakemake tutorial example](https://github.com/snakemake/snakemake-report-plugin-rocrate/tree/main/examples/snakemake-tutorial)
+maps sequencing reads, calls variants, and plots their quality scores. It
+includes `profiles/rocrate` and `profiles/rocrate-metadata-only` configurations.

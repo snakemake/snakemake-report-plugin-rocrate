@@ -21,6 +21,6 @@ snakemake --cores 2
 snakemake --cores 2 --reporter rocrate --profile profiles/rocrate 
 ```
 
-The reporter writes `ro-crate.zip` in this directory. The archive contains the
+The reporter writes `workflow-run.zip` in this directory. The archive contains the
 workflow, input and output files, and run provenance. The generated files and
 downloaded data are ignored by Git.
