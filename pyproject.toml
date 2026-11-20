@@ -22,7 +22,7 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "snakemake-interface-common (>=1.17.4,<2.0.0)", 
+    "snakemake-interface-common (>=1.17.4,<2.0.0)",
     "snakemake-interface-report-plugins (>=1.1.0,<2.0.0)",
     "rocrate (>=0.15.0, <2.0.0)",
     "spdx-license-list (>=3.28.0, <4.0.0)",
@@ -117,9 +117,9 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Ignore type annotations for the time beeing.
+# Ignore type annotations for the time being.
 "src/snakemake_report_plugin_rocrate/*.py" = ["ANN"]
-"examples/*" = ["ANN", "PTH"]
+"examples/**/*.py" = ["ANN", "PTH"]
 
 
 [tool.mypy]
@@ -136,7 +136,6 @@ module = [
     "snakemake.*",
     "snakemake_interface_report_plugins.*",
     "snakemake_interface_common.*",
-    "snakemake.common.tests.*",
 ]
 ignore_missing_imports = true
 
@@ -154,10 +153,6 @@ module = [
     "snakemake_report_plugin_rocrate.validator",
 ]
 ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = ["numpy", "numpy.*"]
-follow_imports = "skip"
 
 [tool.pixi.feature.dev.tasks]
 lint = "ruff check"
