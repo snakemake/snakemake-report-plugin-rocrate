@@ -149,6 +149,13 @@ value without making a network request.
 
 ## Running the examples
 
+### Official Snakemake tutorial
+
+The [tutorial example](examples/snakemake-tutorial/README.md) adapts the
+[official Snakemake basics workflow](https://snakemake.readthedocs.io/en/stable/tutorial/basics.html)
+to generate a Provenance Run RO-Crate from read mapping and variant calling.
+Its README includes data download, environment setup, and run commands.
+
 ### Linear-elastic plate with a hole
 
 The repository includes a FEniCS/DOLFINx workflow for a linear-elastic plate
