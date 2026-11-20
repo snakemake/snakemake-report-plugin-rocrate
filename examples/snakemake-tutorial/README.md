@@ -14,11 +14,11 @@ curl -L https://api.github.com/repos/snakemake/snakemake-tutorial-data/tarball \
 tar -xf snakemake-tutorial-data.tar.gz --strip 1 '*/data'
 
 mamba env create -n snakemake-rocrate-tutorial -f environment.yaml
-eval "$(mamba shell hook --shell zsh)"  
+eval "$(mamba shell hook --shell zsh)"
 mamba activate snakemake-rocrate-tutorial
 
 snakemake --cores 2
-snakemake --cores 2 --reporter rocrate --profile profiles/rocrate 
+snakemake --cores 2 --reporter rocrate --profile profiles/rocrate
 ```
 
 The reporter writes `workflow-run.zip` in this directory. The archive contains the

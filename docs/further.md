@@ -44,7 +44,7 @@ for example `profiles/rocrate/config.yaml`:
 
 ```yaml
 report-rocrate-filename: "workflow-run"
-report-rocrate-run-name: "Genome Example"
+report-rocrate-run-name: "Snakemake tutorial: variant calling"
 report-rocrate-run-license: "CC-BY-4.0"
 report-rocrate-validation-severity: "REQUIRED"
 report-rocrate-agent-orcid: "https://orcid.org/0009-0008-6162-8404"
