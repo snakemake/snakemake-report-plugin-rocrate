@@ -11,11 +11,10 @@ Run these commands from this directory:
 ```bash
 curl -L https://api.github.com/repos/snakemake/snakemake-tutorial-data/tarball \
   -o snakemake-tutorial-data.tar.gz
-tar -xf snakemake-tutorial-data.tar.gz --strip 1 '*/data'
+tar --wildcards -xf snakemake-tutorial-data.tar.gz --strip 1 '*/data'
 
-mamba env create -n snakemake-rocrate-tutorial -f environment.yaml
-eval "$(mamba shell hook --shell zsh)"
-mamba activate snakemake-rocrate-tutorial
+conda env create -n snakemake-rocrate-tutorial -f environment.yaml
+conda activate snakemake-rocrate-tutorial
 
 snakemake --cores 2
 snakemake --cores 2 --reporter rocrate --profile profiles/rocrate
