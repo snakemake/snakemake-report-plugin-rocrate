@@ -46,6 +46,7 @@ class ProvenanceResult:
     methods: JsonLdNodeMap
     tools: JsonLdNodeMap
     supplemental_files: list[CrateFile] = field(default_factory=list)
+    config_files: list[str] = field(default_factory=list)
     workflow_run_action_id: str = ""
 
 

@@ -9,11 +9,26 @@ from snakemake.logging import logger as snakemake_logger
 from snakemake_interface_common.exceptions import WorkflowError
 
 
+def _unique_issue_messages(issues, label: str) -> list[str]:
+    """Show each finding once, with every check that reported it."""
+    checks_by_message: dict[str, list[str]] = {}
+    for issue in issues:
+        checks = checks_by_message.setdefault(issue.message, [])
+        if issue.check.identifier not in checks:
+            checks.append(issue.check.identifier)
+    lines = []
+    for message, checks in checks_by_message.items():
+        identifiers = ", ".join(f'"{identifier}"' for identifier in checks)
+        noun = "check" if len(checks) == 1 else "checks"
+        lines.append(f"{label} {noun} {identifiers}: {message}")
+    return lines
+
+
 def validate_rocrate(
     rocrate_uri: str | Path,
     requirement_severity: models.Severity | str = models.Severity.REQUIRED,
 ) -> None:
-    """Validate a crate against Provenance Run Crate 0.5."""
+    """Validate a crate against Provenance Run Crate 0.6."""
     if isinstance(requirement_severity, str):
         try:
             requirement_severity = models.Severity[requirement_severity.strip().upper()]
@@ -26,53 +41,51 @@ def validate_rocrate(
 
     settings = services.ValidationSettings(
         rocrate_uri=Path(rocrate_uri),
-        profile_identifier="provenance-run-crate-0.5",
+        profile_identifier="provenance-run-crate-0.6",
         requirement_severity=requirement_severity,
     )
     result = services.validate(settings)
 
+    # The profile may define internal heuristic checks that are intentionally
+    # absent from the validator's report. Only reportable checks belong here.
     expected = {
         check
-        for profile in result.context.profiles
-        for requirement in profile.get_requirements(requirement_severity)
-        for check in requirement.get_checks()
-        if check.severity >= requirement_severity and not check.overridden and not check.deactivated
+        for check in result.statistics.checks
+        if check.severity >= requirement_severity
     }
     incomplete = expected - result.executed_checks - result.skipped_checks
     required_incomplete = sorted(
         check.identifier for check in incomplete if check.severity >= models.Severity.REQUIRED
     )
-    if required_incomplete:
-        raise WorkflowError(
-            f"Required RO-Crate validation checks did not complete: {required_incomplete}"
-        )
-
     required_issues = []
     advisory_issues = []
-    for issue in result.get_issues():
+    for issue in result.issues:
         (required_issues if issue.severity >= models.Severity.REQUIRED else advisory_issues).append(
             issue
         )
-    if required_issues:
-        message = "RO-Crate is invalid: required checks failed.\n" + "\n".join(
-            f'REQUIRED check "{issue.check.identifier}": {issue.message}'
-            for issue in required_issues
-        )
-        raise WorkflowError(message)
+    if required_issues or required_incomplete:
+        details = _unique_issue_messages(required_issues, "REQUIRED")
+        skip_details = {
+            detail.check.identifier: detail
+            for detail in getattr(result, "skipped_check_details", ())
+        }
+        for identifier in required_incomplete:
+            detail = skip_details.get(identifier)
+            reason = f" ({detail.message})" if detail and detail.message else ""
+            details.append(f'REQUIRED check "{identifier}" did not complete{reason}')
+        raise WorkflowError("RO-Crate validation failed:\n" + "\n".join(details))
 
     if advisory_issues or incomplete:
+        advisory_messages = _unique_issue_messages(advisory_issues, "RO-Crate advisory")
         snakemake_logger.warning(
             "RO-Crate is valid (all REQUIRED checks passed); "
-            f"{len(advisory_issues)} RECOMMENDED/OPTIONAL finding(s) and "
+            f"{len(advisory_messages)} RECOMMENDED/OPTIONAL finding(s) and "
             f"{len(incomplete)} advisory check(s) not evaluated."
         )
     for check in sorted(incomplete, key=lambda item: item.identifier):
         snakemake_logger.warning(
             f"RO-Crate {check.severity.name} check could not be evaluated: {check.identifier}"
         )
-    for issue in advisory_issues:
-        snakemake_logger.warning(
-            f'RO-Crate advisory ({issue.severity.name}, check "{issue.check.identifier}"): '
-            f"{issue.message}"
-        )
-    snakemake_logger.info("RO-Crate validation succeeded for profile provenance-run-crate-0.5.")
+    for message in _unique_issue_messages(advisory_issues, "RO-Crate advisory"):
+        snakemake_logger.warning(message)
+    snakemake_logger.info("RO-Crate validation succeeded for profile provenance-run-crate-0.6.")

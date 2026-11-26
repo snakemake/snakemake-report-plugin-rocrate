@@ -53,7 +53,7 @@ class ProvenanceRunCrateBuilder:
         self.dag = dag
         self.rules = rules or {}
         self.default_output_stem = default_output_stem
-        self.crate = ROCrate(version="1.1")
+        self.crate = ROCrate(version="1.3")
         self.main_tool_id: str | None = None
 
     def write(self, provenance: ProvenanceResult) -> str:
@@ -196,11 +196,18 @@ class ProvenanceRunCrateBuilder:
         Returns:
             None. Files are added directly to ``self.crate``.
         """
+        script_files = {
+            action["script file"]
+            for action in provenance.actions.values()
+            if action.get("script file")
+        }
         for file in provenance.supplemental_files:
             properties: dict[str, Any] = {
                 "name": file.name,
                 "encodingFormat": file.encoding_format,
             }
+            if file.dest_path in script_files:
+                properties["@type"] = ["File", "SoftwareSourceCode"]
             if Path(file.dest_path).name.casefold() == "readme.md":
                 properties["encodingFormat"] = "text/markdown"
                 properties["about"] = {"@id": "./"}
@@ -256,7 +263,9 @@ class ProvenanceRunCrateBuilder:
         fallback_tool_id = self._ensure_default_software_application()
         action_tool_ids, rule_tool_ids = self._add_rule_tools(provenance, tool_id_map)
         step_ids = self._add_how_to_steps(fallback_tool_id, rule_tool_ids)
-        workflow_id = self._add_workflow(fallback_tool_id, step_ids, rule_tool_ids)
+        workflow_id = self._add_workflow(
+            fallback_tool_id, step_ids, rule_tool_ids, provenance.config_files
+        )
         self._add_actions(
             provenance=provenance,
             file_id_map=file_id_map,
@@ -293,21 +302,21 @@ class ProvenanceRunCrateBuilder:
 
         self._apply_rocrate_settings()
         self.crate.metadata["conformsTo"] = [
-            {"@id": "https://w3id.org/ro/crate/1.1"},
-            {"@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0"},
+            {"@id": "https://w3id.org/ro/crate/1.3"},
+            {"@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.1"},
         ]
         self.crate.root_dataset.append_to(
-            "conformsTo", {"@id": "https://w3id.org/ro/wfrun/process/0.5"}
+            "conformsTo", {"@id": "https://w3id.org/ro/wfrun/process/0.6"}
         )
         self.crate.root_dataset.append_to(
-            "conformsTo", {"@id": "https://w3id.org/ro/wfrun/workflow/0.5"}
+            "conformsTo", {"@id": "https://w3id.org/ro/wfrun/workflow/0.6"}
         )
         self.crate.root_dataset.append_to(
-            "conformsTo", {"@id": "https://w3id.org/ro/wfrun/provenance/0.5"}
+            "conformsTo", {"@id": "https://w3id.org/ro/wfrun/provenance/0.6"}
         )
         self.crate.root_dataset.append_to(
             "conformsTo",
-            {"@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.0"},
+            {"@id": "https://w3id.org/workflowhub/workflow-ro-crate/1.1"},
         )
 
     def _add_tools(self, tools: dict[str, dict[str, Any]]) -> dict[str, str]:
@@ -332,7 +341,7 @@ class ProvenanceRunCrateBuilder:
                 ),
             }
             if tool_node.get("softwareVersion"):
-                properties["softwareVersion"] = tool_node["softwareVersion"]
+                properties["version"] = tool_node["softwareVersion"]
             self.crate.add(
                 ContextEntity(
                     self.crate,
@@ -378,7 +387,7 @@ class ProvenanceRunCrateBuilder:
         }
         action_tool_ids: dict[str, list[str]] = {}
         rule_tool_ids: dict[str, list[str]] = {}
-        tools_by_signature: dict[tuple[str, str | None, tuple[str, ...]], str] = {}
+        tools_by_signature: dict[tuple[str, str | None, tuple[str, ...], str | None], str] = {}
         for action in provenance.actions.values():
             action_id = crate_safe_id(action.get("@id"))
             if action_id == "#action_workflow_run" or action.get("@type") != "action":
@@ -401,14 +410,38 @@ class ProvenanceRunCrateBuilder:
                     ),
                 )
             )
-            if not preferred_package and package_ids:
+            script_file = action.get("script file")
+            if script_file:
+                script_entity = self.crate.get(script_file)
+                if script_entity is not None:
+                    if package_ids:
+                        existing = as_list(script_entity.properties().get("softwareRequirements"))
+                        known_ids = {reference_id(ref) for ref in existing}
+                        requirements = list(existing)
+                        requirements.extend(
+                            {"@id": package_id}
+                            for package_id in package_ids
+                            if package_id not in known_ids
+                        )
+                        script_entity["softwareRequirements"] = requirements
+                    environment_file = action.get("environment file")
+                    if environment_file:
+                        subjects = as_list(script_entity.properties().get("subjectOf"))
+                        if environment_file not in {reference_id(ref) for ref in subjects}:
+                            subjects.append({"@id": environment_file})
+                        script_entity["subjectOf"] = subjects[0] if len(subjects) == 1 else subjects
+                    action_tool_ids[action_id] = [script_file]
+                    if script_file not in rule_tool_ids.setdefault(rule_name, []):
+                        rule_tool_ids[rule_name].append(script_file)
+                    continue
+            if not script_file and not preferred_package and package_ids:
                 action_tool_ids[action_id] = list(package_ids)
                 for package_id in package_ids:
                     if package_id not in rule_tool_ids.setdefault(rule_name, []):
                         rule_tool_ids[rule_name].append(package_id)
                 continue
             environment_file = action.get("environment file")
-            signature = (rule_name, environment_file, package_ids)
+            signature = (rule_name, environment_file, package_ids, script_file)
             if signature not in tools_by_signature:
                 tool_id = f"#rule-tool-{quote(rule_name, safe='')}-{len(tools_by_signature) + 1}"
                 properties: dict[str, Any] = {
@@ -416,9 +449,10 @@ class ProvenanceRunCrateBuilder:
                     "name": rule_name,
                     "description": action.get("description", f"Snakemake rule {rule_name}"),
                 }
-                if package_ids:
+                if package_ids or script_file:
+                    dependencies = ([script_file] if script_file else []) + list(package_ids)
                     properties["softwareRequirements"] = [
-                        {"@id": package_id} for package_id in package_ids
+                        {"@id": dependency_id} for dependency_id in dependencies
                     ]
                 if environment_file:
                     properties["subjectOf"] = {"@id": environment_file}
@@ -441,7 +475,7 @@ class ProvenanceRunCrateBuilder:
                     },
                 )
             )
-            tools_by_signature[(rule_name, None, ())] = tool_id
+            tools_by_signature[(rule_name, None, (), None)] = tool_id
             rule_tool_ids[rule_name] = [tool_id]
         return action_tool_ids, rule_tool_ids
 
@@ -462,7 +496,7 @@ class ProvenanceRunCrateBuilder:
                         "@type": "SoftwareApplication",
                         "name": "Snakemake",
                         "url": "https://snakemake.readthedocs.io/",
-                        "softwareVersion": snakemake_version,
+                        "version": snakemake_version,
                     },
                 )
             )
@@ -970,6 +1004,7 @@ class ProvenanceRunCrateBuilder:
         fallback_tool_id: str,
         step_ids: list[str] | None = None,
         rule_tool_ids: dict[str, list[str]] | None = None,
+        config_files: list[str] | None = None,
     ) -> str | None:
         """Add the Snakefile as the main workflow entity when available.
 
@@ -1007,6 +1042,9 @@ class ProvenanceRunCrateBuilder:
         }
         if step_ids:
             properties["step"] = [{"@id": step_id} for step_id in step_ids]
+        if config_files:
+            references = [{"@id": path} for path in config_files]
+            properties["buildInstructions"] = references[0] if len(references) == 1 else references
         workflow = self.crate.add_workflow(
             source=workflow_path,
             dest_path=workflow_path.name,
@@ -1018,6 +1056,7 @@ class ProvenanceRunCrateBuilder:
         )
         self.crate.mainEntity = {"@id": workflow.id}
         language = self.crate.get(reference_id(workflow.properties()["programmingLanguage"]))
+        language["softwareVersion"] = version("snakemake")
         language["version"] = version("snakemake")
         return workflow.id
 
@@ -1030,44 +1069,44 @@ class ProvenanceRunCrateBuilder:
         self.crate.add(
             ContextEntity(
                 self.crate,
-                "https://w3id.org/ro/wfrun/process/0.5",
+                "https://w3id.org/ro/wfrun/process/0.6",
                 properties={
                     "@type": ["CreativeWork", "Profile"],
                     "name": "Process Run Crate",
-                    "version": "0.5",
+                    "version": "0.6",
                 },
             )
         )
         self.crate.add(
             ContextEntity(
                 self.crate,
-                "https://w3id.org/ro/wfrun/workflow/0.5",
+                "https://w3id.org/ro/wfrun/workflow/0.6",
                 properties={
                     "@type": ["CreativeWork", "Profile"],
                     "name": "Workflow Run Crate",
-                    "version": "0.5",
+                    "version": "0.6",
                 },
             )
         )
         self.crate.add(
             ContextEntity(
                 self.crate,
-                "https://w3id.org/ro/wfrun/provenance/0.5",
+                "https://w3id.org/ro/wfrun/provenance/0.6",
                 properties={
                     "@type": ["CreativeWork", "Profile"],
                     "name": "Provenance Run Crate",
-                    "version": "0.5",
+                    "version": "0.6",
                 },
             )
         )
         self.crate.add(
             ContextEntity(
                 self.crate,
-                "https://w3id.org/workflowhub/workflow-ro-crate/1.0",
+                "https://w3id.org/workflowhub/workflow-ro-crate/1.1",
                 properties={
                     "@type": ["CreativeWork", "Profile"],
                     "name": "Workflow RO-Crate",
-                    "version": "1.0",
+                    "version": "1.1",
                 },
             )
         )
