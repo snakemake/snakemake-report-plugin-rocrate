@@ -1,4 +1,5 @@
 import json
+import zipfile
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -7,9 +8,224 @@ import pytest
 from snakemake_report_plugin_rocrate import ReportSettings
 from snakemake_report_plugin_rocrate.jsonld import as_list
 from snakemake_report_plugin_rocrate.models import CrateFile, ProvenanceResult
+from snakemake_report_plugin_rocrate.provenance_files import FileProvenanceHelpers
 from snakemake_report_plugin_rocrate.provenance_graph import ProvenanceGraphHelpers
 from snakemake_report_plugin_rocrate.rocrate_builder import ProvenanceRunCrateBuilder
 from snakemake_report_plugin_rocrate.validator import validate_rocrate
+
+
+def test_snakefile_outside_workdir_is_archived(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workflow_dir = tmp_path / "workflows"
+    workflow_dir.mkdir()
+    (workflow_dir / "Snakefile").write_text("rule all:\n    input: 'done.txt'\n")
+    output_dir = tmp_path / ".test"
+    output_dir.mkdir()
+    monkeypatch.chdir(output_dir)
+    dag = SimpleNamespace(
+        workflow=SimpleNamespace(main_snakefile="workflows/Snakefile", rundir=str(tmp_path))
+    )
+
+    helper = FileProvenanceHelpers()
+    helper.dag = dag
+    helper.state = SimpleNamespace(supplemental_files={})
+    helper._add_snakefile_supplemental_file()
+    snakefile = helper.state.supplemental_files["Snakefile"]
+    assert Path(snakefile.source_path) == workflow_dir / "Snakefile"
+
+    builder = ProvenanceRunCrateBuilder(dag=dag, settings=ReportSettings())
+    provenance = ProvenanceResult(
+        file_nodes={}, actions={}, methods={}, tools={}, supplemental_files=[snakefile]
+    )
+    archive_path = Path(builder.write(provenance))
+    with zipfile.ZipFile(archive_path) as archive:
+        assert archive.read("Snakefile") == (workflow_dir / "Snakefile").read_bytes()
+
+
+def test_included_snakefiles_are_archived(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    workflow_dir = tmp_path / "workflow"
+    rules_dir = workflow_dir / "rules"
+    rules_dir.mkdir(parents=True)
+    snakefile = workflow_dir / "Snakefile"
+    snakefile.write_text('include: "rules/common.smk"\n')
+    common = rules_dir / "common.smk"
+    common.write_text("rule all:\n    input: 'done.txt'\n")
+    output_dir = tmp_path / ".test"
+    output_dir.mkdir()
+    monkeypatch.chdir(output_dir)
+    workflow = SimpleNamespace(
+        main_snakefile="workflow/Snakefile",
+        rundir=str(tmp_path),
+        included=iter(
+            [
+                SimpleNamespace(get_path_or_uri=lambda **_: "workflow/Snakefile"),
+                SimpleNamespace(get_path_or_uri=lambda **_: "workflow/rules/common.smk"),
+            ]
+        ),
+    )
+    dag = SimpleNamespace(workflow=workflow)
+    helper = FileProvenanceHelpers()
+    helper.dag = dag
+    helper.state = SimpleNamespace(supplemental_files={})
+    helper._add_snakefile_supplemental_file()
+    assert Path(helper.state.supplemental_files["rules/common.smk"].source_path) == common
+
+    builder = ProvenanceRunCrateBuilder(dag=dag, settings=ReportSettings())
+    provenance = ProvenanceResult(
+        file_nodes={},
+        actions={},
+        methods={},
+        tools={},
+        supplemental_files=list(helper.state.supplemental_files.values()),
+    )
+    with zipfile.ZipFile(builder.write(provenance)) as archive:
+        assert archive.read("rules/common.smk") == common.read_bytes()
+        graph = {
+            entity["@id"]: entity
+            for entity in json.loads(archive.read("ro-crate-metadata.json"))["@graph"]
+        }
+        assert graph["rules/common.smk"]["name"] == "common.smk"
+        assert graph["Snakefile"]["name"] == "Snakefile"
+
+
+def test_data_file_name_uses_basename(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    data_file = Path("results/nested/output.txt")
+    data_file.parent.mkdir(parents=True)
+    data_file.write_text("result")
+    builder = ProvenanceRunCrateBuilder(dag=SimpleNamespace(), settings=ReportSettings())
+    builder._add_data_files(
+        {
+            str(data_file): {
+                "@id": "local:output",
+                "label": str(data_file),
+                "source path": str(data_file.resolve()),
+            }
+        }
+    )
+    assert builder.crate.get(str(data_file)).properties()["name"] == "output.txt"
+
+
+def test_metadata_only_references_workflow_files_outside_report_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workflow_dir = tmp_path / "workflow"
+    rules_dir = workflow_dir / "rules"
+    rules_dir.mkdir(parents=True)
+    (workflow_dir / "Snakefile").write_text('include: "rules/common.smk"\n')
+    (rules_dir / "common.smk").write_text("rule all:\n    input: 'done.txt'\n")
+    output_dir = tmp_path / ".test"
+    output_dir.mkdir()
+    monkeypatch.chdir(output_dir)
+    workflow = SimpleNamespace(
+        main_snakefile="workflow/Snakefile",
+        rundir=str(tmp_path),
+        included=[
+            SimpleNamespace(get_path_or_uri=lambda **_: "workflow/Snakefile"),
+            SimpleNamespace(get_path_or_uri=lambda **_: "workflow/rules/common.smk"),
+        ],
+    )
+    dag = SimpleNamespace(workflow=workflow)
+    helper = FileProvenanceHelpers()
+    helper.dag = dag
+    helper.copy_external_files = False
+    helper.state = SimpleNamespace(supplemental_files={})
+    helper._add_snakefile_supplemental_file()
+    assert set(helper.state.supplemental_files) == {
+        "../workflow/Snakefile",
+        "../workflow/rules/common.smk",
+    }
+
+    provenance = ProvenanceResult(
+        file_nodes={},
+        actions={},
+        methods={},
+        tools={},
+        supplemental_files=list(helper.state.supplemental_files.values()),
+    )
+    builder = ProvenanceRunCrateBuilder(dag=dag, settings=ReportSettings(metadata_only=True))
+    builder.write(provenance)
+    descriptor = json.loads((output_dir / "ro-crate-metadata.json").read_text())
+    graph = {entity["@id"]: entity for entity in descriptor["@graph"]}
+    assert graph["./"]["mainEntity"] == {"@id": "../workflow/Snakefile"}
+    for path in ("../workflow/Snakefile", "../workflow/rules/common.smk"):
+        assert path in graph
+        assert (output_dir / path).is_file()
+    assert sorted(path.name for path in output_dir.iterdir()) == ["ro-crate-metadata.json"]
+
+
+def test_rule_script_is_the_rule_instrument(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    Path("Snakefile").write_text("rule validate_genome:\n    output: 'genome.fna'\n")
+    script = Path("scripts/validate_fasta.py")
+    script.parent.mkdir()
+    script.write_text("print('validate')\n")
+    provenance = ProvenanceResult(
+        file_nodes={},
+        actions={
+            "validate": {
+                "@id": "local:action_1",
+                "@type": "action",
+                "rule": "validate_genome",
+                "script file": str(script),
+            }
+        },
+        methods={},
+        tools={},
+        supplemental_files=[CrateFile(str(script), str(script), str(script), "text/x-python")],
+    )
+    builder = ProvenanceRunCrateBuilder(
+        dag=SimpleNamespace(workflow=SimpleNamespace(main_snakefile="Snakefile")),
+        settings=ReportSettings(),
+    )
+    archive_path = Path(builder.write(provenance))
+    graph = {entity.id: entity.properties() for entity in builder.crate.get_entities()}
+    tool_id = graph["#action_1"]["instrument"]["@id"]
+    assert tool_id == str(script)
+    assert "mainEntity" not in graph[tool_id]
+    assert graph[tool_id]["@type"] == ["File", "SoftwareSourceCode"]
+    assert not any(entity_id.startswith("#rule-tool-validate_genome") for entity_id in graph)
+    with zipfile.ZipFile(archive_path) as archive:
+        assert archive.read(str(script)) == script.read_bytes()
+
+
+def test_configfile_is_packaged_as_workflow_build_instructions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    Path("Snakefile").write_text('configfile: "config/config.yaml"\n')
+    config = Path("config/config.yaml")
+    config.parent.mkdir()
+    config.write_text("samples: 2\n")
+    dag = SimpleNamespace(
+        workflow=SimpleNamespace(main_snakefile="Snakefile", configfiles=[str(config)])
+    )
+    helper = FileProvenanceHelpers()
+    helper.dag = dag
+    helper.copy_external_files = True
+    helper.state = SimpleNamespace(supplemental_files={})
+    config_files = helper._add_configfiles()
+    provenance = ProvenanceResult(
+        file_nodes={},
+        actions={},
+        methods={},
+        tools={},
+        supplemental_files=list(helper.state.supplemental_files.values()),
+        config_files=config_files,
+    )
+    builder = ProvenanceRunCrateBuilder(dag=dag, settings=ReportSettings())
+    archive_path = Path(builder.write(provenance))
+    with zipfile.ZipFile(archive_path) as archive:
+        assert archive.read("config/config.yaml") == config.read_bytes()
+        graph = {
+            entity["@id"]: entity
+            for entity in json.loads(archive.read("ro-crate-metadata.json"))["@graph"]
+        }
+    assert graph["Snakefile"]["buildInstructions"] == {"@id": "config/config.yaml"}
+    assert graph["config/config.yaml"]["encodingFormat"] == "application/yaml"
 
 
 @pytest.mark.parametrize("with_tool", [True, False])
@@ -248,10 +464,10 @@ def test_each_action_uses_its_own_environment_tool(
     assert refs("Snakefile", "hasPart") == [first_tool, second_tool]
     assert refs(first_tool, "subjectOf") == ["envs/python-311.yaml"]
     assert refs(second_tool, "subjectOf") == ["envs/python-unpinned.yaml"]
-    assert [graph[ref]["softwareVersion"] for ref in refs(first_tool, "softwareRequirements")] == [
+    assert [graph[ref]["version"] for ref in refs(first_tool, "softwareRequirements")] == [
         "3.11.17"
     ]
-    assert [graph[ref]["softwareVersion"] for ref in refs(second_tool, "softwareRequirements")] == [
+    assert [graph[ref]["version"] for ref in refs(second_tool, "softwareRequirements")] == [
         "3.15.0"
     ]
 
@@ -264,12 +480,13 @@ def test_omitted_main_tool_uses_installed_packages_as_instruments(
     provenance = ProvenanceResult(
         file_nodes={},
         actions={
+            "workflow": {"@id": "local:action_workflow_run", "@type": "action"},
             "first": {
                 "@id": "local:first",
                 "@type": "action",
                 "rule": "first",
                 "realizes method": {"@id": "local:method"},
-            }
+            },
         },
         methods={
             "first": {

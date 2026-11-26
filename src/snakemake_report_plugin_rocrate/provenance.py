@@ -76,6 +76,7 @@ class ProvenanceBuilder(
         self.state = ProvenanceState()
         sorted_jobs = sorted(self.jobs, key=lambda job: job.starttime)
         file_nodes: JsonLdNodeMap = {}
+        config_files = self._add_configfiles()
 
         self._add_workflow_run_action(sorted_jobs)
 
@@ -91,6 +92,7 @@ class ProvenanceBuilder(
             methods=self.state.methods,
             tools=self.state.tools,
             supplemental_files=list(self.state.supplemental_files.values()),
+            config_files=config_files,
             workflow_run_action_id=self.state.workflow_run_action_id,
         )
 
@@ -169,10 +171,39 @@ class ProvenanceBuilder(
         for environment in self._job_conda_files(job):
             source = getattr(environment, "file", None)
             if source and Path(str(source)).is_file():
-                environment_path = self._copy_external_relative_files(str(source))
-                self._add_supplemental_file(environment_path, environment_path, "application/yaml")
+                source_path = Path(str(source)).resolve()
+                environment_path = self._workflow_resource_destination(source_path)
+                if environment_path is None:
+                    environment_path = self._copy_external_relative_files(str(source_path))
+                    source_path = Path(environment_path)
+                self._add_supplemental_file(str(source_path), environment_path, "application/yaml")
                 node["environment file"] = environment_path
         self._add_snakefile_supplemental_file()
+        dag_job = next((item for item in self.dag.jobs if item.jobid == job.job.jobid), None)
+        if dag_job is not None and getattr(dag_job.rule, "script", None):
+            source = dag_job._path_to_source_file(dag_job.rule.script)
+            script_path = Path(source.get_path_or_uri(secret_free=False))
+            if not script_path.is_absolute() and not script_path.is_file():
+                rundir = getattr(self.dag.workflow, "rundir", None)
+                if rundir is not None and (Path(rundir) / script_path).is_file():
+                    script_path = Path(rundir) / script_path
+            if script_path.is_file():
+                script_path = script_path.resolve()
+                snakefile = self._find_snakefile()
+                try:
+                    destination = (
+                        str(script_path.relative_to(snakefile[1].parent.resolve()))
+                        if snakefile
+                        else None
+                    )
+                except ValueError:
+                    destination = None
+                if destination is None:
+                    destination = self._copy_external_relative_files(str(script_path))
+                if not self.copy_external_files:
+                    destination = self._copy_external_relative_files(str(script_path))
+                self._add_supplemental_file(str(script_path), destination, "text/x-python")
+                node["script file"] = destination
         return node
 
     def _create_method_node(self, job, optional_fields: JsonLdNode) -> str:

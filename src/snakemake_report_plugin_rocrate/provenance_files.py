@@ -9,12 +9,40 @@ from pathlib import Path
 from snakemake_report_plugin_rocrate.jsonld import JsonLdNode, JsonLdNodeMap
 from snakemake_report_plugin_rocrate.models import CrateFile
 from snakemake_report_plugin_rocrate.utils import get_mime_type
+from snakemake_report_plugin_rocrate.workflow_path import main_snakefile_path
 
 logger = logging.getLogger(__name__)
 
 
 class FileProvenanceHelpers:
     """Helpers that register provenance file nodes and supplemental files."""
+
+    def _add_configfiles(self) -> list[str]:
+        """Register loaded configuration files and return their crate paths."""
+        destinations = []
+        for configfile in getattr(self.dag.workflow, "configfiles", ()):
+            path = Path(configfile)
+            if not path.is_file():
+                continue
+            path = path.resolve()
+            try:
+                destination = str(path.relative_to(Path.cwd().resolve()))
+            except ValueError:
+                destination = self._workflow_resource_destination(path)
+            if destination is None:
+                destination = self._copy_external_relative_files(str(path))
+                source = destination
+            else:
+                source = str(path)
+            encoding = (
+                "application/yaml"
+                if path.suffix.lower() in {".yaml", ".yml"}
+                else get_mime_type(str(path))
+            )
+            self._add_supplemental_file(source, destination, encoding)
+            if destination not in destinations:
+                destinations.append(destination)
+        return destinations
 
     def _add_shell_supplemental_files(self, job) -> None:
         """Register shell scripts referenced by a job as supplemental files."""
@@ -61,16 +89,36 @@ class FileProvenanceHelpers:
                 )
 
     def _add_snakefile_supplemental_file(self) -> None:
-        """Register the workflow Snakefile as a supplemental file when found."""
+        """Register all local Snakefiles loaded by Snakemake."""
         snakefile = self._find_snakefile()
         if not snakefile:
             return
         snakefile_name, snakepath = snakefile
+        if not getattr(self, "copy_external_files", True):
+            snakefile_name = os.path.relpath(snakepath.resolve(), Path.cwd())
         self._add_supplemental_file(
+            str(snakepath),
             snakefile_name,
-            snakepath,
             "text/x-python",
         )
+        workflow = self.dag.workflow
+        for source in getattr(workflow, "included", ()):
+            path = Path(source.get_path_or_uri(secret_free=False))
+            if not path.is_absolute():
+                rundir = getattr(workflow, "rundir", None)
+                if rundir is not None and (Path(rundir) / path).is_file():
+                    path = Path(rundir) / path
+            path = path.resolve()
+            if path == snakepath.resolve() or not path.is_file():
+                continue
+            if not getattr(self, "copy_external_files", True):
+                destination = os.path.relpath(path, Path.cwd())
+            else:
+                try:
+                    destination = str(path.relative_to(snakepath.parent.resolve()))
+                except ValueError:
+                    destination = self._copy_external_relative_files(str(path))
+            self._add_supplemental_file(str(path), destination, "text/x-python")
 
     def _add_file(self, file_path: str, file_dict: JsonLdNodeMap) -> JsonLdNode:
         """Register a file node, copying external files into the workspace."""
@@ -156,17 +204,29 @@ class FileProvenanceHelpers:
         return script_path, file_paths
 
     def _find_snakefile(self):
-        """Return the configured Snakefile name and relative path when available."""
-        snakefile = self.dag.workflow.main_snakefile
-        if not snakefile:
+        """Return the Snakefile archive name and source path when available."""
+        snakefile_path = main_snakefile_path(self.dag.workflow)
+        if snakefile_path is None:
             return None
-
-        snakefile_path = Path(snakefile)
-        return snakefile_path.name, os.path.relpath(snakefile_path)
+        return snakefile_path.name, snakefile_path
 
     def _is_file(self, file_name: str) -> bool:
         """Return whether a path currently exists as a regular file."""
         return Path(file_name).is_file()
+
+    def _workflow_resource_destination(self, source_path: Path) -> str | None:
+        """Place files from the workflow source tree under its root directory."""
+        if not getattr(self, "copy_external_files", True):
+            return None
+        snakefile = main_snakefile_path(self.dag.workflow)
+        if snakefile is None:
+            return None
+        source_root = snakefile.resolve().parent
+        try:
+            relative_path = source_path.resolve().relative_to(source_root)
+        except ValueError:
+            return None
+        return str(Path(source_root.name) / relative_path)
 
     def _copy_external_relative_files(self, path_str) -> str:
         """Copy external files into the workspace while preserving structure.

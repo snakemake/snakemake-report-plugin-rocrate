@@ -1,6 +1,7 @@
 import os
 from collections.abc import Generator
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -92,3 +93,26 @@ def test_external_files_are_referenced_without_copying(
     assert referenced == os.path.relpath(mock_ro_file_path, project_dir)
     assert (project_dir / referenced).resolve() == Path(mock_ro_file_path).resolve()
     assert not (project_dir / helper.external_directory_name).exists()
+
+
+def test_workflow_environment_uses_root_workflow_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_root = tmp_path / "workflow"
+    environment = source_root / "envs" / "validate.yaml"
+    environment.parent.mkdir(parents=True)
+    environment.write_text("name: validate\n")
+    (source_root / "Snakefile").write_text("rule all:\n    input: 'done'\n")
+    output_dir = tmp_path / ".test"
+    output_dir.mkdir()
+    monkeypatch.chdir(output_dir)
+    helper = MockFileProvenanceHelpers()
+    helper.dag = SimpleNamespace(
+        workflow=SimpleNamespace(main_snakefile=str(source_root / "Snakefile"))
+    )
+
+    assert helper._workflow_resource_destination(environment) == "workflow/envs/validate.yaml"
+    assert helper._workflow_resource_destination(tmp_path / "other.yaml") is None
+
+    helper.copy_external_files = False
+    assert helper._workflow_resource_destination(environment) is None

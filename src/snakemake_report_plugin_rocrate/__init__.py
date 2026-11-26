@@ -185,4 +185,5 @@ class Reporter(ReporterBase):  # type: ignore[misc]
             validate_rocrate(
                 crate_path,
                 requirement_severity=self.settings.validation_severity,
+                metadata_only=self.settings.metadata_only,
             )
