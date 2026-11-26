@@ -49,9 +49,7 @@ def validate_rocrate(
     # The profile may define internal heuristic checks that are intentionally
     # absent from the validator's report. Only reportable checks belong here.
     expected = {
-        check
-        for check in result.statistics.checks
-        if check.severity >= requirement_severity
+        check for check in result.statistics.checks if check.severity >= requirement_severity
     }
     incomplete = expected - result.executed_checks - result.skipped_checks
     required_incomplete = sorted(

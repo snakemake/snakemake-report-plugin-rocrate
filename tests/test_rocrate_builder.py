@@ -43,9 +43,7 @@ def test_snakefile_outside_workdir_is_archived(
         assert archive.read("Snakefile") == (workflow_dir / "Snakefile").read_bytes()
 
 
-def test_included_snakefiles_are_archived(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_included_snakefiles_are_archived(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     workflow_dir = tmp_path / "workflow"
     rules_dir = workflow_dir / "rules"
     rules_dir.mkdir(parents=True)
@@ -75,7 +73,10 @@ def test_included_snakefiles_are_archived(
 
     builder = ProvenanceRunCrateBuilder(dag=dag, settings=ReportSettings())
     provenance = ProvenanceResult(
-        file_nodes={}, actions={}, methods={}, tools={},
+        file_nodes={},
+        actions={},
+        methods={},
+        tools={},
         supplemental_files=list(helper.state.supplemental_files.values()),
     )
     with zipfile.ZipFile(builder.write(provenance)) as archive:
@@ -102,9 +103,7 @@ def test_rule_script_is_the_rule_instrument(
         },
         methods={},
         tools={},
-        supplemental_files=[
-            CrateFile(str(script), str(script), str(script), "text/x-python")
-        ],
+        supplemental_files=[CrateFile(str(script), str(script), str(script), "text/x-python")],
     )
     builder = ProvenanceRunCrateBuilder(
         dag=SimpleNamespace(workflow=SimpleNamespace(main_snakefile="Snakefile")),
@@ -130,9 +129,7 @@ def test_configfile_is_packaged_as_workflow_build_instructions(
     config.parent.mkdir()
     config.write_text("samples: 2\n")
     dag = SimpleNamespace(
-        workflow=SimpleNamespace(
-            main_snakefile="Snakefile", configfiles=[str(config)]
-        )
+        workflow=SimpleNamespace(main_snakefile="Snakefile", configfiles=[str(config)])
     )
     helper = FileProvenanceHelpers()
     helper.dag = dag
@@ -140,7 +137,10 @@ def test_configfile_is_packaged_as_workflow_build_instructions(
     helper.state = SimpleNamespace(supplemental_files={})
     config_files = helper._add_configfiles()
     provenance = ProvenanceResult(
-        file_nodes={}, actions={}, methods={}, tools={},
+        file_nodes={},
+        actions={},
+        methods={},
+        tools={},
         supplemental_files=list(helper.state.supplemental_files.values()),
         config_files=config_files,
     )

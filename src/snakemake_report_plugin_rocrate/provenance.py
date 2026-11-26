@@ -176,9 +176,7 @@ class ProvenanceBuilder(
                 if environment_path is None:
                     environment_path = self._copy_external_relative_files(str(source_path))
                     source_path = Path(environment_path)
-                self._add_supplemental_file(
-                    str(source_path), environment_path, "application/yaml"
-                )
+                self._add_supplemental_file(str(source_path), environment_path, "application/yaml")
                 node["environment file"] = environment_path
         self._add_snakefile_supplemental_file()
         dag_job = next((item for item in self.dag.jobs if item.jobid == job.job.jobid), None)
@@ -202,9 +200,7 @@ class ProvenanceBuilder(
                     destination = None
                 if destination is None:
                     destination = self._copy_external_relative_files(str(script_path))
-                self._add_supplemental_file(
-                    str(script_path), destination, "text/x-python"
-                )
+                self._add_supplemental_file(str(script_path), destination, "text/x-python")
                 node["script file"] = destination
         return node
 
