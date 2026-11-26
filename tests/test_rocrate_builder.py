@@ -392,10 +392,10 @@ def test_each_action_uses_its_own_environment_tool(
     assert refs("Snakefile", "hasPart") == [first_tool, second_tool]
     assert refs(first_tool, "subjectOf") == ["envs/python-311.yaml"]
     assert refs(second_tool, "subjectOf") == ["envs/python-unpinned.yaml"]
-    assert [graph[ref]["softwareVersion"] for ref in refs(first_tool, "softwareRequirements")] == [
+    assert [graph[ref]["version"] for ref in refs(first_tool, "softwareRequirements")] == [
         "3.11.17"
     ]
-    assert [graph[ref]["softwareVersion"] for ref in refs(second_tool, "softwareRequirements")] == [
+    assert [graph[ref]["version"] for ref in refs(second_tool, "softwareRequirements")] == [
         "3.15.0"
     ]
 
@@ -408,12 +408,13 @@ def test_omitted_main_tool_uses_installed_packages_as_instruments(
     provenance = ProvenanceResult(
         file_nodes={},
         actions={
+            "workflow": {"@id": "local:action_workflow_run", "@type": "action"},
             "first": {
                 "@id": "local:first",
                 "@type": "action",
                 "rule": "first",
                 "realizes method": {"@id": "local:method"},
-            }
+            },
         },
         methods={
             "first": {

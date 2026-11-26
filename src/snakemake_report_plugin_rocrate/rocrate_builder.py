@@ -448,6 +448,8 @@ class ProvenanceRunCrateBuilder:
                     "@type": "SoftwareApplication",
                     "name": rule_name,
                     "description": action.get("description", f"Snakemake rule {rule_name}"),
+                    "url": "https://snakemake.readthedocs.io/",
+                    "version": version("snakemake"),
                 }
                 if package_ids or script_file:
                     dependencies = ([script_file] if script_file else []) + list(package_ids)
@@ -472,6 +474,8 @@ class ProvenanceRunCrateBuilder:
                         "@type": "SoftwareApplication",
                         "name": rule_name,
                         "description": getattr(rule, "source", None),
+                        "url": "https://snakemake.readthedocs.io/",
+                        "version": version("snakemake"),
                     },
                 )
             )
