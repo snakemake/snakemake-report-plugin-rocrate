@@ -200,6 +200,8 @@ class ProvenanceBuilder(
                     destination = None
                 if destination is None:
                     destination = self._copy_external_relative_files(str(script_path))
+                if not self.copy_external_files:
+                    destination = self._copy_external_relative_files(str(script_path))
                 self._add_supplemental_file(str(script_path), destination, "text/x-python")
                 node["script file"] = destination
         return node

@@ -81,6 +81,78 @@ def test_included_snakefiles_are_archived(tmp_path: Path, monkeypatch: pytest.Mo
     )
     with zipfile.ZipFile(builder.write(provenance)) as archive:
         assert archive.read("rules/common.smk") == common.read_bytes()
+        graph = {
+            entity["@id"]: entity
+            for entity in json.loads(archive.read("ro-crate-metadata.json"))["@graph"]
+        }
+        assert graph["rules/common.smk"]["name"] == "common.smk"
+        assert graph["Snakefile"]["name"] == "Snakefile"
+
+
+def test_data_file_name_uses_basename(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    data_file = Path("results/nested/output.txt")
+    data_file.parent.mkdir(parents=True)
+    data_file.write_text("result")
+    builder = ProvenanceRunCrateBuilder(dag=SimpleNamespace(), settings=ReportSettings())
+    builder._add_data_files(
+        {
+            str(data_file): {
+                "@id": "local:output",
+                "label": str(data_file),
+                "source path": str(data_file.resolve()),
+            }
+        }
+    )
+    assert builder.crate.get(str(data_file)).properties()["name"] == "output.txt"
+
+
+def test_metadata_only_references_workflow_files_outside_report_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workflow_dir = tmp_path / "workflow"
+    rules_dir = workflow_dir / "rules"
+    rules_dir.mkdir(parents=True)
+    (workflow_dir / "Snakefile").write_text('include: "rules/common.smk"\n')
+    (rules_dir / "common.smk").write_text("rule all:\n    input: 'done.txt'\n")
+    output_dir = tmp_path / ".test"
+    output_dir.mkdir()
+    monkeypatch.chdir(output_dir)
+    workflow = SimpleNamespace(
+        main_snakefile="workflow/Snakefile",
+        rundir=str(tmp_path),
+        included=[
+            SimpleNamespace(get_path_or_uri=lambda **_: "workflow/Snakefile"),
+            SimpleNamespace(get_path_or_uri=lambda **_: "workflow/rules/common.smk"),
+        ],
+    )
+    dag = SimpleNamespace(workflow=workflow)
+    helper = FileProvenanceHelpers()
+    helper.dag = dag
+    helper.copy_external_files = False
+    helper.state = SimpleNamespace(supplemental_files={})
+    helper._add_snakefile_supplemental_file()
+    assert set(helper.state.supplemental_files) == {
+        "../workflow/Snakefile",
+        "../workflow/rules/common.smk",
+    }
+
+    provenance = ProvenanceResult(
+        file_nodes={},
+        actions={},
+        methods={},
+        tools={},
+        supplemental_files=list(helper.state.supplemental_files.values()),
+    )
+    builder = ProvenanceRunCrateBuilder(dag=dag, settings=ReportSettings(metadata_only=True))
+    builder.write(provenance)
+    descriptor = json.loads((output_dir / "ro-crate-metadata.json").read_text())
+    graph = {entity["@id"]: entity for entity in descriptor["@graph"]}
+    assert graph["./"]["mainEntity"] == {"@id": "../workflow/Snakefile"}
+    for path in ("../workflow/Snakefile", "../workflow/rules/common.smk"):
+        assert path in graph
+        assert (output_dir / path).is_file()
+    assert sorted(path.name for path in output_dir.iterdir()) == ["ro-crate-metadata.json"]
 
 
 def test_rule_script_is_the_rule_instrument(

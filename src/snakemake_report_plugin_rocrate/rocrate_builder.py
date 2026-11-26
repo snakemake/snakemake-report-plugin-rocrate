@@ -6,6 +6,7 @@ instances into concrete RO-Crate ZIP archives.
 
 from __future__ import annotations
 
+import os
 from importlib.metadata import version
 from pathlib import Path
 from typing import Any
@@ -203,7 +204,7 @@ class ProvenanceRunCrateBuilder:
         }
         for file in provenance.supplemental_files:
             properties: dict[str, Any] = {
-                "name": file.name,
+                "name": Path(file.dest_path).name,
                 "encodingFormat": file.encoding_format,
             }
             if file.dest_path in script_files:
@@ -238,7 +239,7 @@ class ProvenanceRunCrateBuilder:
                 source,
                 dest_path=file_path,
                 properties={
-                    "name": file_node.get("label", file_path),
+                    "name": Path(file_path).name,
                     "encodingFormat": get_mime_type(file_path),
                 },
             )
@@ -1039,6 +1040,7 @@ class ProvenanceRunCrateBuilder:
                 "HowTo",
             ],
             "hasPart": [{"@id": tool_id} for tool_id in tools],
+            "name": workflow_path.name,
             "encodingFormat": "text/plain",
             "conformsTo": {
                 "@id": "https://bioschemas.org/profiles/ComputationalWorkflow/1.0-RELEASE"
@@ -1051,7 +1053,11 @@ class ProvenanceRunCrateBuilder:
             properties["buildInstructions"] = references[0] if len(references) == 1 else references
         workflow = self.crate.add_workflow(
             source=workflow_path,
-            dest_path=workflow_path.name,
+            dest_path=(
+                os.path.relpath(workflow_path.resolve(), Path.cwd())
+                if getattr(self.settings, "metadata_only", False)
+                else workflow_path.name
+            ),
             lang="snakemake",
             main=False,
             fetch_remote=False,

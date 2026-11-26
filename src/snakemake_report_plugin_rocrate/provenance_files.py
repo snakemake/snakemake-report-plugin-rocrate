@@ -94,6 +94,8 @@ class FileProvenanceHelpers:
         if not snakefile:
             return
         snakefile_name, snakepath = snakefile
+        if not getattr(self, "copy_external_files", True):
+            snakefile_name = os.path.relpath(snakepath.resolve(), Path.cwd())
         self._add_supplemental_file(
             str(snakepath),
             snakefile_name,
@@ -109,10 +111,13 @@ class FileProvenanceHelpers:
             path = path.resolve()
             if path == snakepath.resolve() or not path.is_file():
                 continue
-            try:
-                destination = str(path.relative_to(snakepath.parent.resolve()))
-            except ValueError:
-                destination = self._copy_external_relative_files(str(path))
+            if not getattr(self, "copy_external_files", True):
+                destination = os.path.relpath(path, Path.cwd())
+            else:
+                try:
+                    destination = str(path.relative_to(snakepath.parent.resolve()))
+                except ValueError:
+                    destination = self._copy_external_relative_files(str(path))
             self._add_supplemental_file(str(path), destination, "text/x-python")
 
     def _add_file(self, file_path: str, file_dict: JsonLdNodeMap) -> JsonLdNode:

@@ -27,6 +27,7 @@ def _unique_issue_messages(issues, label: str) -> list[str]:
 def validate_rocrate(
     rocrate_uri: str | Path,
     requirement_severity: models.Severity | str = models.Severity.REQUIRED,
+    metadata_only: bool = False,
 ) -> None:
     """Validate a crate against Provenance Run Crate 0.6."""
     if isinstance(requirement_severity, str):
@@ -43,6 +44,7 @@ def validate_rocrate(
         rocrate_uri=Path(rocrate_uri),
         profile_identifier="provenance-run-crate-0.6",
         requirement_severity=requirement_severity,
+        metadata_only=metadata_only,
     )
     result = services.validate(settings)
 

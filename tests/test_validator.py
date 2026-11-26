@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 import pytest
+from rocrate_validator import services
 from rocrate_validator.models import Severity
 from snakemake.exceptions import WorkflowError
 
@@ -76,3 +77,20 @@ def test_hidden_profile_check_does_not_invalidate_crate(
     )
 
     validate_rocrate("crate.zip")
+
+
+def test_metadata_only_is_passed_to_validator(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen = []
+
+    def validate(settings: services.ValidationSettings) -> SimpleNamespace:
+        seen.append(settings.metadata_only)
+        return SimpleNamespace(
+            statistics=SimpleNamespace(checks=set()),
+            executed_checks=set(),
+            skipped_checks=set(),
+            issues=[],
+        )
+
+    monkeypatch.setattr("snakemake_report_plugin_rocrate.validator.services.validate", validate)
+    validate_rocrate("crate", metadata_only=True)
+    assert seen == [True]
