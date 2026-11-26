@@ -1,6 +1,6 @@
 # snakemake-report-plugin-rocrate
 
-Snakemake report plugin to automatically create a [Provenance Run Crate](https://w3id.org/ro/wfrun/provenance/0.5) after a workflow run, capturing metadata about the workflow execution. Provenance Run Crate is the most detailed profile in the [Workflow Run RO-Crate (WRROC)](https://www.researchobject.org/workflow-run-crate/) profile collection, recording provenance at the level of individual tool executions.
+Snakemake report plugin to automatically create a [Provenance Run Crate 0.6](https://w3id.org/ro/wfrun/provenance/0.6) after a workflow run, capturing metadata about the workflow execution. Provenance Run Crate is the most detailed profile in the [Workflow Run RO-Crate (WRROC)](https://www.researchobject.org/workflow-run-crate/) profile collection, recording provenance at the level of individual tool executions.
 
 ## About RO-Crate and WRROC
 
@@ -38,9 +38,11 @@ python -m pip install --editable .
 ## Usage
 
 The reporter collects execution metadata from Snakemake jobs and writes a
-Provenance Run Crate 0.5 ZIP using RO-Crate 1.1 and Workflow RO-Crate 1.0. The
-reporter [validates](https://github.com/crs4/rocrate-validator) the finished
-archive at the selected severity.
+Provenance Run Crate 0.6 ZIP using RO-Crate 1.3 and Workflow RO-Crate 1.1. The
+reporter [validates](https://github.com/crs4/rocrate-validator) the generated
+crate at the selected severity. The `rocrate` Python library used to build the
+archive is a separate dependency; this project requires library version 0.16.0
+or newer (below 2.0.0).
 
 ## Reporter arguments
 
@@ -56,13 +58,11 @@ ignored in metadata-only mode.
 ### `metadata-only`
 
 Writes only the `ro-crate-metadata.json` descriptor directly into the workflow
-working directory (the current working directory, i.e. next to the Snakefile and
-the workflow outputs) instead of packaging the crate as a ZIP archive. No file is
+working directory (the current working directory, which may differ from the
+Snakefile directory) instead of packaging the crate as a ZIP archive. No file is
 copied: the descriptor's relative paths resolve against the real workflow files
 in place, and files that live outside the working directory are referenced by
-their path relative to it. For example, running the FEniCS/DOLFINx example with
-`--report-rocrate-metadata-only` writes `ro-crate-metadata.json` alongside its
-`Snakefile`.
+their path relative to it.
 
 ### `run-name`
 
@@ -160,13 +160,14 @@ directory; `profiles/rocrate-metadata-only` writes only the metadata descriptor.
 
 ## Profile validation
 
-Profile 0.5 is validated directly with the rules distributed by
+Provenance Run Crate 0.6 is validated directly with the rules distributed by
 `roc-validator`.
 
 Sources:
 
-- [Provenance Run Crate 0.5](https://w3id.org/ro/wfrun/provenance/0.5)
-- [Workflow RO-Crate 1.0](https://w3id.org/workflowhub/workflow-ro-crate/1.0)
+- [RO-Crate 1.3](https://w3id.org/ro/crate/1.3)
+- [Provenance Run Crate 0.6](https://w3id.org/ro/wfrun/provenance/0.6)
+- [Workflow RO-Crate 1.1](https://w3id.org/workflowhub/workflow-ro-crate/1.1)
 
 The reporter does not invent metadata that Snakemake does not supply, such as
 workflow authorship or a released workflow version. For jobs with a materialized
