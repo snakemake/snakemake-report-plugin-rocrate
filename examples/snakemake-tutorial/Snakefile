@@ -1,0 +1,57 @@
+"""Read mapping and variant calling based on the official Snakemake tutorial."""
+
+SAMPLES = ["A", "B"]
+
+
+rule all:
+    input:
+        "plots/quals.svg"
+
+
+rule map_reads:
+    input:
+        reference="data/genome.fa",
+        reads="data/samples/{sample}.fastq"
+    output:
+        "mapped_reads/{sample}.bam"
+    shell:
+        "bwa mem {input.reference} {input.reads} | samtools view -Sb - > {output}"
+
+
+rule sort_reads:
+    input:
+        "mapped_reads/{sample}.bam"
+    output:
+        "sorted_reads/{sample}.bam"
+    shell:
+        "samtools sort -T sorted_reads/{wildcards.sample} -O bam {input} > {output}"
+
+
+rule index_reads:
+    input:
+        "sorted_reads/{sample}.bam"
+    output:
+        "sorted_reads/{sample}.bam.bai"
+    shell:
+        "samtools index {input}"
+
+
+rule call_variants:
+    input:
+        reference="data/genome.fa",
+        alignments=expand("sorted_reads/{sample}.bam", sample=SAMPLES),
+        indices=expand("sorted_reads/{sample}.bam.bai", sample=SAMPLES)
+    output:
+        "calls/all.vcf"
+    shell:
+        "bcftools mpileup -f {input.reference} {input.alignments} | "
+        "bcftools call -mv - > {output}"
+
+
+rule plot_qualities:
+    input:
+        "calls/all.vcf"
+    output:
+        "plots/quals.svg"
+    script:
+        "scripts/plot_qualities.py"

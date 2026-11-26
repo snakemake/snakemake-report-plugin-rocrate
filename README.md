@@ -149,59 +149,14 @@ value without making a network request.
 
 ## Running the examples
 
-### Linear-elastic plate with a hole
+### Snakemake tutorial: variant calling
 
-The repository includes a FEniCS/DOLFINx workflow for a linear-elastic plate
-with a hole. From the repository root, navigate to the example and generate the RO-Crate:
-
-```bash
-cd examples/linear-elastic-plate-with-hole/fenics-dolfinx
-
-snakemake \
-  --software-deployment-method conda \
-  --reporter rocrate \
-  --profile profiles/rocrate \
-  --cores 1
-```
-
-The reporter writes `workflow-run.zip` in the example directory.
-
-Note that the above command leverages Snakemake profiles to offload
-plugin-specific parameter settings to `profiles/rocrate/config.yaml`:
-
-```yaml
-report-rocrate-filename: "workflow-run"
-report-rocrate-run-name: "Linear elastic plate with a hole"
-report-rocrate-run-license: "CC-BY-4.0"
-report-rocrate-main-tool: "fenics-dolfinx"
-report-rocrate-validation-severity: "REQUIRED"
-report-rocrate-agent-orcid: "https://orcid.org/0009-0008-6162-8404"
-report-rocrate-agent-name: "Mahdi Jafarkhani"
-report-rocrate-organization-ror: "https://ror.org/04vnq7t77"
-report-rocrate-organization-name: "University of Stuttgart"
-report-rocrate-organization-url: "https://www.uni-stuttgart.de/en/"
-```
-
-### Poisson equation
-
-The repository also includes a workflow that solves the Poisson equation,
-post-processes the solution, and compiles the results into a PDF. From the
-repository root, run:
-
-```bash
-cd examples/poisson-equation/snakemake
-
-snakemake paper.pdf \
-  --software-deployment-method conda \
-  --reporter rocrate \
-  --profile profiles/rocrate \
-  --cores 1 \
-  --use-conda
-```
-
-The reporter writes `poisson-equation-workflow-run.zip` in the example
-directory. See the [example README]((https://github.com/snakemake/snakemake-report-plugin-rocrate/blob/main/examples/poisson-equation/snakemake/README.md)
-for more information about the workflow and its configuration.
+The [tutorial example](examples/snakemake-tutorial/README.md) adapts the
+[official Snakemake basics workflow](https://snakemake.readthedocs.io/en/stable/tutorial/basics.html)
+to generate a Provenance Run RO-Crate from read mapping and variant calling.
+Its README includes data download, environment setup, and run commands. The
+`profiles/rocrate` configuration writes `workflow-run.zip` in the example
+directory; `profiles/rocrate-metadata-only` writes only the metadata descriptor.
 
 ## Profile validation
 
