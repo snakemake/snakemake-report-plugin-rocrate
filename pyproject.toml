@@ -24,7 +24,7 @@ classifiers = [
 dependencies = [
     "snakemake-interface-common (>=1.17.4,<2.0.0)",
     "snakemake-interface-report-plugins (>=1.1.0,<2.0.0)",
-    "rocrate (>=0.15.0, <2.0.0)",
+    "rocrate (>=0.16.0, <2.0.0)",
     "spdx-license-list (>=3.28.0, <4.0.0)",
     "roc-validator>=0.14.0"
 ]
