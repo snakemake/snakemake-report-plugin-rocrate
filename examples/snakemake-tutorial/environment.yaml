@@ -1,0 +1,14 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - pip
+  - snakemake >=9.17.2,<10
+  - bwa ~=0.7.17
+  - samtools >=1.19
+  - bcftools >=1.19
+  - matplotlib
+  - pysam
+  - pip:
+      - packaging>=24,<26
+      - snakemake-report-plugin-rocrate
